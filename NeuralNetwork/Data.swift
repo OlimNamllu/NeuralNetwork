@@ -526,9 +526,12 @@ let machineSamples: [[CGFloat]] = [[5.0, 0.0, 8.0, 1.0, 1.0, 8.0, 8.0, 9.0, 1.0,
 ]
 
 
-let corpusPath = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/onestar_corpus.txt"
+var corpusPath: String {
+    get_path()
+}
+
 let sampleText = try! String(contentsOf: URL(fileURLWithPath: corpusPath), encoding: .utf8)
-    .trimmingCharacters(in: .whitespacesAndNewlines) 
+    .trimmingCharacters(in: .whitespacesAndNewlines)
 
 let vocab = Array("abcdefghijklmnopqrstuvwxyz ")
 let sampleData: [Int] = {

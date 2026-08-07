@@ -83,9 +83,17 @@ func regenerateComputerRandom() {
 
 //
 
-var network = NeuralNetwork()
+var homePath1 = "/Users/tim/Documents/neural_network/NeuralNetwork/onestar_corpus.txt"
+var homePath2 = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/onestar_corpus.txt"
 
-network.backprop(iterations: 60000, learnRate: 0.04, batchSize: 56)
+func get_path() -> String {
+    return homePath1
+}
+
+var network = NeuralNetwork()
+network.write(parametersCXT21_H288_N003)
+
+//network.backprop(iterations: 60000, learnRate: 0.04, batchSize: 56)
 
 print("Training complete. Generating text...")
 
@@ -93,5 +101,5 @@ let seedStart = 7500
 let seed = String(sampleData[seedStart..<(seedStart + textContextSize)].map { vocab[$0] })
 print(network.generate(from: seed, characters: 300))
 
-writeParameters(network.list(), title: "CXT21_H288_N003")
+//writeParameters(network.list(), title: "CXT21_H288_N003")
  
