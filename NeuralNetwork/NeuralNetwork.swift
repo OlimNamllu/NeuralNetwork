@@ -15,7 +15,7 @@ struct CapturedNeurons {
 }
 
 class NeuralNetwork {
-    static let layers = [textContextSize * 27, 288, 27]
+    static let layers = [textContextSize * 27, 312, 27]
 
 
     var inputWeights: [[CGFloat]] = (0..<layers[0]).map { _ in
@@ -248,7 +248,7 @@ class NeuralNetwork {
     func prediction(from context: String) -> String {
         let inputs = generateOneHotVectors(for: context)
         let (outputs, _) = run(inputs)
-        return argmax(outputs)
+        return softmax(outputs)
     }
     
     func generate(from context: String, characters: Int) -> String {

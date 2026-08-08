@@ -9,15 +9,16 @@
 import Foundation
 
 // MARK: - Saving Parameters
-let path = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/Parameters.swift"
-let url = URL(fileURLWithPath: path)
 
-func writeParameters(_ params: [CGFloat], title: String) {
-    let swift = "let parameters\(title): [CGFloat] = \(params) \n \n"
+func writeParameters(_ params: [CGFloat], delete: Bool = false) {
+    let swift = "\(params) \n \n"
     
-    if let fileHandle = try? FileHandle(forWritingTo: url) {
+    if let fileHandle = try? FileHandle(forWritingTo: URL(filePath: getPath(for: milo, filename: "Parameters.json"))) {
         defer { try? fileHandle.close() } // Always close the file stream
         let _ = try? fileHandle.seekToEnd()
+        if delete {
+            try? fileHandle.truncate(atOffset: 0)
+        }
         if let data = swift.data(using: .utf8) {
             try? fileHandle.write(contentsOf: data)
         }
@@ -78,28 +79,48 @@ func regenerateComputerRandom() {
     writeData(computerRandoms)
 }
 
+var tim = "/Users/tim/Documents/neural_network/NeuralNetwork/"
+var milo = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/"
+
+func getPath(for user: String, filename: String) -> String {
+    return (user + filename)
+}
+
+func fetchParameters() -> [CGFloat] {
+    let decoder = JSONDecoder()
+    let url = URL(filePath: getPath(for: milo, filename: "Parameters.json"))
+    
+    let data = try! Data(contentsOf: url)
+    var result = [CGFloat]()
+    
+    do {
+        result = try decoder.decode([CGFloat].self, from: data)
+    } catch {
+        print("JSON decoder is selling")
+    }
+    
+    return result
+}
+
+
 
 // MARK: - EXECUTE
 
-//
-
-var homePath1 = "/Users/tim/Documents/neural_network/NeuralNetwork/onestar_corpus.txt"
-var homePath2 = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/onestar_corpus.txt"
-
-func get_path() -> String {
-    return homePath1
-}
-
 var network = NeuralNetwork()
-network.write(parametersCXT21_H288_N003)
 
-//network.backprop(iterations: 60000, learnRate: 0.04, batchSize: 56)
+network.write(fetchParameters())
 
-print("Training complete. Generating text...")
+network.backprop(iterations: 40000, learnRate: 0.032, batchSize: 56)
 
-let seedStart = 7500
+print("Training complete. Starting generation")
+
+
+let seedStart = 18000
 let seed = String(sampleData[seedStart..<(seedStart + textContextSize)].map { vocab[$0] })
-print(network.generate(from: seed, characters: 300))
+print(network.generate(from: seed, characters: 500))
 
-//writeParameters(network.list(), title: "CXT21_H288_N003")
+writeParameters(network.list(), delete: true)
+
+
+
  

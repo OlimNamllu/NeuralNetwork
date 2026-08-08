@@ -527,7 +527,7 @@ let machineSamples: [[CGFloat]] = [[5.0, 0.0, 8.0, 1.0, 1.0, 8.0, 8.0, 9.0, 1.0,
 
 
 var corpusPath: String {
-    get_path()
+    getPath(for: milo, filename: "onestar_corpus.txt")
 }
 
 let sampleText = try! String(contentsOf: URL(fileURLWithPath: corpusPath), encoding: .utf8)
@@ -544,14 +544,14 @@ let sampleData: [Int] = {
     print("corpus loaded: \(mapped.count) characters")
     return mapped
 }()  // count is 38015
-let textContextSize: Int = 21
+let textContextSize: Int = 20
 
 var sampleSeed: Int {
-    return Int.random(in: 12..<56_000)
+    return Int.random(in: 4..<62_000)
 }
 
 var validationStarts: [Int] {
-    return Array(56000..<64000)
+    return Array(62000..<68000)
 }
 
 
