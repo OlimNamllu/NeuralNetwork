@@ -13,7 +13,7 @@ import Foundation
 func writeParameters(_ params: [CGFloat], delete: Bool = false) {
     let swift = "\(params) \n \n"
     
-    if let fileHandle = try? FileHandle(forWritingTo: URL(filePath: getPath(for: milo, filename: "Parameters.json"))) {
+    if let fileHandle = try? FileHandle(forWritingTo: URL(filePath: getPath(filename: "Parameters.json"))) {
         defer { try? fileHandle.close() } // Always close the file stream
         let _ = try? fileHandle.seekToEnd()
         if delete {
@@ -82,13 +82,13 @@ func regenerateComputerRandom() {
 var tim = "/Users/tim/Documents/neural_network/NeuralNetwork/"
 var milo = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/"
 
-func getPath(for user: String, filename: String) -> String {
-    return (user + filename)
+func getPath(filename: String) -> String {
+    return (getUser() + filename)
 }
 
 func fetchParameters() -> [CGFloat] {
     let decoder = JSONDecoder()
-    let url = URL(filePath: getPath(for: milo, filename: "Parameters.json"))
+    let url = URL(filePath: getPath(filename: "Parameters.json"))
     
     let data = try! Data(contentsOf: url)
     var result = [CGFloat]()

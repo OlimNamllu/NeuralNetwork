@@ -527,7 +527,7 @@ let machineSamples: [[CGFloat]] = [[5.0, 0.0, 8.0, 1.0, 1.0, 8.0, 8.0, 9.0, 1.0,
 
 
 var corpusPath: String {
-    getPath(for: milo, filename: "onestar_corpus.txt")
+    getPath(filename: "onestar_corpus.txt")
 }
 
 let sampleText = try! String(contentsOf: URL(fileURLWithPath: corpusPath), encoding: .utf8)
