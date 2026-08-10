@@ -110,17 +110,14 @@ var network = NeuralNetwork()
 
 network.write(fetchParameters())
 
-network.backprop(iterations: 40000, learnRate: 0.032, batchSize: 56)
+network.backprop(iterations: 100000, learnRate: 0.01, batchSize: 56)
 
 print("Training complete. Starting generation")
 
 
-let seedStart = 18000
+let seedStart = 13000
 let seed = String(sampleData[seedStart..<(seedStart + textContextSize)].map { vocab[$0] })
 print(network.generate(from: seed, characters: 500))
 
 writeParameters(network.list(), delete: true)
 
-
-
- 
