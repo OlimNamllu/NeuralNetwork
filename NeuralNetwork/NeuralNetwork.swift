@@ -189,88 +189,51 @@ class NeuralNetwork {
        }
        
        // MARK: - Backpropagation
-       func backprop(iterations: Int, learnRate: CGFloat, batchSize: CGFloat) {
-           for i in 0..<iterations {
-               if i % 80 == 0 {
-                   let v = evaluate(on: validationStarts)
-                   print("Iteration \(i)/\(iterations) — \(v.printOut())")
-                   scores.append(v.mse)
-               }
-               
-               var outputBiasesPartials: [CGFloat] = Array(repeating: 0, count: Self.layers[2])
-               var middleBiasesPartials: [CGFloat] = Array(repeating: 0, count: Self.layers[1])
-               var middleWeightPartials: [[CGFloat]] = Array(repeating: Array(repeating: 0, count: Self.layers[2]), count: Self.layers[1])
-               var inputWeightPartials: [[CGFloat]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
-               
-               for _ in 0..<Int(batchSize) {
-                   let seed = sampleSeed
-                   let input = encode(startingAt: seed, noise: 0.03)
-                   let target = makeTarget(startingAt: seed)
-                   
-                   let datum: ([CGFloat], [CGFloat]) = (input, target)
-                   
-                   
-                   let (_, captured) = self.run(datum.0)
-                   
-                   for (index, outputNeuron) in captured.outputNeurons.enumerated() {
-                       outputBiasesPartials[index] += 2 * (outputNeuron - datum.1[index]) * tanhDerivative(outputNeuron)
-                   }
-                   
-                   for (index, middleNeuron) in captured.middleNeurons.enumerated() {
-                       for (syndex, outputNeuron) in captured.outputNeurons.enumerated() {
-                           middleWeightPartials[index][syndex] += 2 * (outputNeuron - datum.1[syndex]) * middleNeuron * tanhDerivative(outputNeuron) /* It's like how here, the partial doesn't depend on middleWeights[index][syndex]*/
-                       }
-                   }
-                   
-                   var middleDeltas: [CGFloat] = Array(repeating: 0, count: Self.layers[1])
-                   
-                   for (index, middleNeuron) in captured.middleNeurons.enumerated() {
-                       var result: CGFloat = 0
-                       for (syndex, outputNeuron) in captured.outputNeurons.enumerated() {
-                           result += 2 * (outputNeuron - datum.1[syndex])
-                           * tanhDerivative(outputNeuron)
-                           * middleWeights[index][syndex]
-                       }
-                       let delta = result * tanhDerivative(middleNeuron)
-                       middleDeltas[index] = delta
-                       middleBiasesPartials[index] += delta
-                   }
-                   
-                   for (index, inputNeuron) in captured.inputNeurons.enumerated() {
-                       if inputNeuron == 0 { continue }
-                       for syndex in 0..<Self.layers[1] {
-                           inputWeightPartials[index][syndex] += middleDeltas[syndex] * inputNeuron
-                       }
-                   }
-               }
-               
-               
-               outputBiasesPartials = outputBiasesPartials.map { $0 * learnRate / batchSize }
-               middleBiasesPartials = middleBiasesPartials.map { $0 * learnRate / batchSize }
-               inputWeightPartials = inputWeightPartials.map { $0.map { $0 * learnRate / batchSize }}
-               middleWeightPartials = middleWeightPartials.map { $0.map { $0 * learnRate / batchSize }}
-               
-               for (index, _) in outputBiases.enumerated() {
-                   outputBiases[index] -= outputBiasesPartials[index]
-               }
-               
-               for (index, _) in middleBiases.enumerated() {
-                   middleBiases[index] -= middleBiasesPartials[index]
-               }
-               
-               for (index, middleWeight) in middleWeights.enumerated() {
-                   for (syndex, _) in middleWeight.enumerated() {
-                       middleWeights[index][syndex] -= middleWeightPartials[index][syndex]
-                   }
-               }
-               
-               for (index, inputWeight) in inputWeights.enumerated() {
-                   for (syndex, _) in inputWeight.enumerated() {
-                       inputWeights[index][syndex] -= inputWeightPartials[index][syndex]
-                   }
-               }
-           }
-       }
+    func backprop(iterations: Int, learnRate: CGFloat, batchSize: Int) {
+        for i in 0..<iterations {
+            // define partials
+            var inputWeightPartials: [[CGFloat]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
+            var outputBiasPartials: [CGFloat] = Array(repeating: 0, count: Self.layers.last!)
+            var middleBiasPartials: [[CGFloat]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
+                Array(repeating: 0, count: Self.layers[layerNum.0])
+            }
+            var middleWeightPartials: [[[CGFloat]]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
+                Array(repeating: Array(repeating: 0, count: Self.layers[layerNum.0 + 1]), count: Self.layers[layerNum.0])
+            }
+            
+            for _ in 0..<batchSize {
+                // Reference point
+                var referenceMatrix: [[CGFloat]] = Array(repeating: 0, count: Self.layers.count).enumerated().map { layerNum in
+                    Array(repeating: 0, count: Self.layers[layerNum.0])
+                }
+                
+                let seed = sampleSeed
+                let inputs = encode(startingAt: sampleSeed)
+                let target = makeTarget(startingAt: seed)
+                
+                let datum: ([CGFloat], [CGFloat]) = (inputs, target)
+                
+                let (_, captured) = self.run(datum.0)
+                
+                
+                // add changes to partials
+                for (index, outputNeuron) in captured.outputNeurons.enumerated() {
+                    outputBiasPartials[index] += 2 * (outputNeuron - datum.1[index]) * tanhDerivative(outputNeuron)
+                    
+                    referenceMatrix[referenceMatrix.count - 1][index] = (outputNeuron - datum.1[index]) * tanhDerivative(outputNeuron)
+                }
+                
+                for (index, middleLayer) in captured.hiddenLayers.reversed().enumerated() {
+                    for (syndex, middleNeuron) in middleLayer.enumerated() {
+                        
+                    }
+                }
+                                   
+            }
+            
+            // divide partial magnitudes by batch size (effectively averaging over batches)
+        }
+    }
        
        func prediction(from context: String) -> String {
            let inputs = generateOneHotVectors(for: context)
