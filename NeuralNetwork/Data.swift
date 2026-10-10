@@ -14,13 +14,13 @@ import Foundation
 // Training data: human-style vs. CSPRNG 16-digit integers.
 //
 // IMPORTANT: each sample is stored as its 16 DIGITS, not as one value.
-// CGFloat is a Double; its integer-exact range stops at 2^53 = 9007199254740992,
-// so ~10% of 16-digit integers cannot round-trip through CGFloat. Digit vectors
+// Double is a Double; its integer-exact range stops at 2^53 = 9007199254740992,
+// so ~10% of 16-digit integers cannot round-trip through Double. Digit vectors
 // are both exact and the shape a network actually wants (16 inputs, values 0...9).
 // Divide by 9.0 if you want them normalised to 0...1.
 
 /// 64 x 16 - digits produced by hand, no generator. Label 0.
-let humanSamples: [[CGFloat]] = [[3, 9, 7, 2, 6, 9, 3, 7, 7, 3, 9, 7, 8, 6, 4, 9],
+let humanSamples: [[Double]] = [[3, 9, 7, 2, 6, 9, 3, 7, 7, 3, 9, 7, 8, 6, 4, 9],
                                  [3, 2, 0, 4, 6, 1, 0, 6, 5, 3, 1, 5, 6, 3, 6, 5],
                                  [6, 6, 3, 8, 6, 1, 6, 4, 3, 9, 7, 1, 7, 4, 9, 8],
                                  [3, 9, 8, 5, 7, 2, 6, 3, 6, 7, 2, 7, 3, 9, 9, 7],
@@ -273,7 +273,7 @@ let humanSamples: [[CGFloat]] = [[3, 9, 7, 2, 6, 9, 3, 7, 7, 3, 9, 7, 8, 6, 4, 9
 
 /// 64 x 16 - digits from a CSPRNG (OS entropy). Label 1.
 
-let machineSamples: [[CGFloat]] = [[5.0, 0.0, 8.0, 1.0, 1.0, 8.0, 8.0, 9.0, 1.0, 9.0, 4.0, 3.0, 4.0, 8.0, 0.0, 2.0],
+let machineSamples: [[Double]] = [[5.0, 0.0, 8.0, 1.0, 1.0, 8.0, 8.0, 9.0, 1.0, 9.0, 4.0, 3.0, 4.0, 8.0, 0.0, 2.0],
                                    [5.0, 8.0, 7.0, 4.0, 6.0, 2.0, 1.0, 1.0, 6.0, 9.0, 8.0, 4.0, 5.0, 7.0, 2.0, 1.0],
                                    [5.0, 7.0, 1.0, 0.0, 3.0, 5.0, 3.0, 3.0, 9.0, 1.0, 2.0, 1.0, 9.0, 2.0, 8.0, 2.0],
                                    [6.0, 8.0, 3.0, 2.0, 4.0, 0.0, 7.0, 3.0, 1.0, 1.0, 9.0, 0.0, 3.0, 7.0, 7.0, 0.0],
@@ -555,8 +555,8 @@ var validationStarts: [Int] {
 }
 
 
-func encode(startingAt start: Int, noise: Double = 0.00) -> [CGFloat] {
-    var input = [CGFloat](repeating: 0, count: textContextSize * 27)
+func encode(startingAt start: Int, noise: Double = 0.00) -> [Double] {
+    var input = [Double](repeating: 0, count: textContextSize * 27)
     for slot in 0..<textContextSize {
         var character = sampleData[start + slot]
         if noise > 0 && Double.random(in: 0..<1) < noise {
@@ -567,8 +567,8 @@ func encode(startingAt start: Int, noise: Double = 0.00) -> [CGFloat] {
     return input
 }
 
-func makeTarget(startingAt start: Int) -> [CGFloat] {
-    var target = [CGFloat](repeating: -0.8, count: 27)
+func makeTarget(startingAt start: Int) -> [Double] {
+    var target = [Double](repeating: -0.8, count: 27)
     target[sampleData[start + textContextSize]] = 0.8
     return target
 }
@@ -585,8 +585,8 @@ func makeTarget(startingAt start: Int) -> [CGFloat] {
 
 
 
-var allSamples: [([CGFloat], [CGFloat])] = {
-   var inProgress: [([CGFloat], [CGFloat])] = []
+var allSamples: [([Double], [Double])] = {
+   var inProgress: [([Double], [Double])] = []
    for humanSample in humanSamples {
        inProgress.append((humanSample, [1, 0]))
    }

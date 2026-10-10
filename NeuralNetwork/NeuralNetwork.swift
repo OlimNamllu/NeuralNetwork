@@ -1,11 +1,12 @@
 import Foundation
+import Accelerate
 
 // MARK: - Network
 
 struct CapturedNeurons {
-    var inputNeurons: [CGFloat]
-    var outputNeurons: [CGFloat]
-    var hiddenLayers: [[CGFloat]]
+    var inputNeurons: [Double]
+    var outputNeurons: [Double]
+    var hiddenLayers: [[Double]]
     
     init() {
         self.inputNeurons = []
@@ -14,25 +15,28 @@ struct CapturedNeurons {
     }
 }
 
+
+
+
 class NeuralNetwork {
     // static let layers = [textContextSize * 27, 312, 27]
     
     static let layers = [2, 3, 4, 2]
     
     struct HiddenLayer: Equatable {
-        var biases: [CGFloat]
+        var biases: [Double]
         
         //This is the weight to the next layer not previous
-        var weights: [[CGFloat]]
+        var weights: [[Double]]
         
         init(layerCount: Int, nextLayerCount: Int) {
             biases = (0..<layerCount).map { _ in
-                CGFloat.random(in: -0.3...0.3)
+                Double.random(in: -0.3...0.3)
             }
             
             weights = (0..<layerCount).map { _ in
                 (0..<nextLayerCount).map { _ in
-                    CGFloat.random(in: -0.3...0.3)
+                    Double.random(in: -0.3...0.3)
                 }
             }
         }
@@ -54,16 +58,16 @@ class NeuralNetwork {
         }
     }()
     
-    var inputWeights: [[CGFloat]] = (0..<layers[0]).map { _ in
-        (0..<layers[1]).map { _ in CGFloat.random(in: -0.3...0.3) } }
+    var inputWeights: [[Double]] = (0..<layers[0]).map { _ in
+        (0..<layers[1]).map { _ in Double.random(in: -0.3...0.3) } }
     
-    var outputBiases: [CGFloat] = (0..<layers.last!).map { _ in CGFloat.random(in: -0.1...0.1) }
+    var outputBiases: [Double] = (0..<layers.last!).map { _ in Double.random(in: -0.1...0.1) }
     
     
     struct Metrics {
-        var mse: CGFloat
-        var accuracy: CGFloat
-        var top3: CGFloat
+        var mse: Double
+        var accuracy: Double
+        var top3: Double
         
         func printOut() -> String {
             return "MSE: \(mse), ACCURACY: \(accuracy), TOP3: \(top3)"
@@ -72,7 +76,7 @@ class NeuralNetwork {
     
 
     
-    func saveParameters(_ params: [CGFloat]) {
+    func saveParameters(_ params: [Double]) {
         let expectedCount = {
             Self.layers.enumerated().map { (index, size) in
                 if index < Self.layers.count - 1 {
@@ -138,8 +142,8 @@ class NeuralNetwork {
         print(outputBiasesEnd, expectedCount)
     }
     
-    func list() -> [CGFloat] {
-        var list = [CGFloat]()
+    func list() -> [Double] {
+        var list = [Double]()
         
         for array in inputWeights {
             list.append(contentsOf: array)
@@ -160,7 +164,7 @@ class NeuralNetwork {
        }
        
        
-       //    func mapRange(_ x: CGFloat) -> CGFloat {
+       //    func mapRange(_ x: Double) -> Double {
        //        return (2.0 / 9.0) * x - 1.0
        //    }
        
@@ -170,11 +174,11 @@ class NeuralNetwork {
            case logicError
        }
        
-       static func cost(output: [CGFloat], answer: [CGFloat]) -> CGFloat {
-           guard output.count == Self.layers.last else { return CGFloat.infinity }
-           guard answer.count == Self.layers.last else { return CGFloat.infinity }
+       static func cost(output: [Double], answer: [Double]) -> Double {
+           guard output.count == Self.layers.last else { return Double.infinity }
+           guard answer.count == Self.layers.last else { return Double.infinity }
            
-           var sum: CGFloat = 0
+           var sum: Double = 0
            
            for (output, answer) in zip(output, answer) {
                sum += pow(output - answer, 2)
@@ -184,26 +188,37 @@ class NeuralNetwork {
            return sum
        }
        
-       func tanhDerivative(_ postActivation: CGFloat) -> CGFloat {
+       func tanhDerivative(_ postActivation: Double) -> Double {
            return 1 - pow(postActivation, 2)
        }
        
+    
+    func flattenArray2D(_ input: [[Double]]) -> (Int, Int, [Double]) {
+        return (input.count, input.first!.count, input.flatMap() {$0})
+    }
+    
+    func flattenArray3D(_ input: [[[Double]]]) -> (Int, Int, Int, [Double]) {
+        return (input.count, input.first!.count, input.first!.first!.count, input.flatMap() {$0.flatMap(){$0}})
+    }
+    
+    
+    
        // MARK: - Backpropagation
-    func backprop(iterations: Int, learnRate: CGFloat, batchSize: Int) {
-        for i in 0..<iterations {
+    func backprop(iterations: Int, learnRate: Double, batchSize: Int) {
+        for _ in 0..<iterations {
             // define partials
-            var inputWeightPartials: [[CGFloat]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
-            var outputBiasPartials: [CGFloat] = Array(repeating: 0, count: Self.layers.last!)
-            var middleBiasPartials: [[CGFloat]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
+            var inputWeightPartials: [[Double]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
+            var outputBiasPartials: [Double] = Array(repeating: 0, count: Self.layers.last!)
+            var middleBiasPartials: [[Double]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
                 Array(repeating: 0, count: Self.layers[layerNum.0])
             }
-            var middleWeightPartials: [[[CGFloat]]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
+            var middleWeightPartials: [[[Double]]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
                 Array(repeating: Array(repeating: 0, count: Self.layers[layerNum.0 + 1]), count: Self.layers[layerNum.0])
             }
             
             for _ in 0..<batchSize {
-                // Reference point
-                var referenceMatrix: [[CGFloat]] = Array(repeating: 0, count: Self.layers.count).enumerated().map { layerNum in
+                // Reference point: PREACTIVATION
+                var referenceMatrix: [[Double]] = Array(repeating: 0, count: Self.layers.count).enumerated().map { layerNum in
                     Array(repeating: 0, count: Self.layers[layerNum.0])
                 }
                 
@@ -211,7 +226,7 @@ class NeuralNetwork {
                 let inputs = encode(startingAt: sampleSeed)
                 let target = makeTarget(startingAt: seed)
                 
-                let datum: ([CGFloat], [CGFloat]) = (inputs, target)
+                let datum: ([Double], [Double]) = (inputs, target)
                 
                 let (_, captured) = self.run(datum.0)
                 
@@ -224,14 +239,56 @@ class NeuralNetwork {
                 }
                 
                 for (index, middleLayer) in captured.hiddenLayers.reversed().enumerated() {
+                    let actualIndex = captured.hiddenLayers.count - index - 1
                     for (syndex, middleNeuron) in middleLayer.enumerated() {
+                        //SET REFERENCE PARTIALS
+                        for (lindex) in 0..<(index==0 ? captured.outputNeurons : captured.hiddenLayers[actualIndex + 1]).count {
+                            referenceMatrix[actualIndex][syndex] += tanhDerivative(middleNeuron) * hiddenLayers[actualIndex].weights[syndex][lindex] * referenceMatrix[actualIndex + 1][lindex]
+                            
+                            middleWeightPartials[actualIndex][syndex][lindex] += captured.hiddenLayers[actualIndex][syndex] * referenceMatrix[actualIndex+1][lindex]
+                        }
                         
+                        middleBiasPartials[actualIndex][syndex] += referenceMatrix[actualIndex][syndex]
                     }
                 }
-                                   
+                
+                for (index, _) in captured.inputNeurons.enumerated() {
+                    for (syndex, _) in captured.hiddenLayers[0].enumerated() {
+                        inputWeightPartials[index][syndex] += captured.inputNeurons[index] * referenceMatrix[0][syndex]
+                    }
+                }
+                
             }
             
-            // divide partial magnitudes by batch size (effectively averaging over batches)
+            let factor = learnRate/Double(batchSize)
+            
+            for j in 0..<inputWeightPartials.count {
+                vDSP.multiply(factor, inputWeightPartials[j], result: &inputWeightPartials[j])
+                for (index, k) in inputWeightPartials[j].enumerated() {
+                    inputWeights[j][index] = k
+                }
+            }
+            
+            vDSP.multiply(factor, outputBiasPartials, result: &outputBiasPartials)
+            for (index, k) in outputBiasPartials.enumerated() {
+                outputBiases[index] = k
+            }
+            
+            for j in 0..<middleBiasPartials.count {
+                vDSP.multiply(factor, middleBiasPartials[j], result: &middleBiasPartials[j])
+                for (index, k) in middleBiasPartials[j].enumerated() {
+                    hiddenLayers[j].biases[index] = k
+                }
+            }
+            
+            for j in 0..<middleWeightPartials.count {
+                for k in 0..<middleWeightPartials[j].count {
+                    vDSP.multiply(factor, middleWeightPartials[j][k], result: &middleWeightPartials[j][k])
+                    for (index, l) in middleWeightPartials[j][k].enumerated() {
+                        hiddenLayers[j].weights[k][index] = l
+                    }
+                }
+            }
         }
     }
        
@@ -249,21 +306,21 @@ class NeuralNetwork {
            return result
        }
        
-       func argmax(_ outputs: [CGFloat]) -> String {
-           var max: (value: CGFloat, index: Int) = (-CGFloat.infinity, 0)
+       func argmax(_ outputs: [Double]) -> String {
+           var max: (value: Double, index: Int) = (-Double.infinity, 0)
            for (i, o) in outputs.enumerated() {
                if o > max.value { max.value = o; max.index = i }
            }
            return String(vocab[max.index])
        }
        
-       func softmax(_ outputs: [CGFloat], temperature: CGFloat = 0.08) -> String {
+       func softmax(_ outputs: [Double], temperature: Double = 0.08) -> String {
            let scaled = outputs.map { $0 / temperature }
            let m = scaled.max()!
            let exps = scaled.map { exp(($0 - m)) }
            let sum = exps.reduce(0, +)
            
-           var r = CGFloat.random(in: 0..<sum)
+           var r = Double.random(in: 0..<sum)
            for (k, e) in exps.enumerated() {
                r -= e
                if r <= 0 { return String(vocab[k]) }
@@ -272,59 +329,12 @@ class NeuralNetwork {
        }
        
        
-       func run(_ inputs: [CGFloat]) -> ([CGFloat], CapturedNeurons) {
-           guard inputs.count == Self.layers[0] else {
-               print("FATAL ERROR: Input count mismatch")
-               fatalError()
-           }
+       func run(_ inputs: [Double]) -> ([Double], CapturedNeurons) {
            
-           let mapped = inputs // Can apply mapping
-           var neurons: CapturedNeurons = .init()
-           
-           neurons.inputNeurons = mapped
-           
-           var middleValues: [CGFloat] = Array(repeating: 0.0, count: Self.layers[1])
-           for middleNeuron in 0..<Self.layers[1] {
-               var sum: CGFloat = 0
-               
-               for (index, input) in mapped.enumerated() {
-                   if input == 0 { continue }
-                   
-                   let scaled = input * inputWeights[index][middleNeuron]
-                   
-                   sum += scaled
-               }
-               
-               sum += middleBiases[middleNeuron]
-               
-               
-               middleValues[middleNeuron] = tanh(sum)
-           }
-           
-           neurons.middleNeurons = middleValues
-           
-           var outputValues: [CGFloat] = Array(repeating: 0.0, count: Self.layers[2])
-           for outputNeuron in 0..<Self.layers[2] {
-               var sum: CGFloat = 0
-               
-               for (index, input) in middleValues.enumerated() {
-                   let scaled = input * middleWeights[index][outputNeuron]
-                   
-                   sum += scaled
-               }
-               
-               sum += outputBiases[outputNeuron]
-               
-               
-               outputValues[outputNeuron] = tanh(sum)
-           }
-           
-           neurons.outputNeurons = outputValues
-           
-           return (outputValues, neurons)
        }
+
        func evaluate(on starts: [Int]) -> Metrics {
-           var squaredError: CGFloat = 0
+           var squaredError: Double = 0
            var correct = 0
            var inTop3 = 0
            
@@ -350,12 +360,12 @@ class NeuralNetwork {
                if betterCount < 3 { inTop3 += 1 }
            }
            
-           let n = CGFloat(starts.count)
+           let n = Double(starts.count)
            
            return Metrics(
                mse: squaredError / (n * 27),
-               accuracy: CGFloat(correct) / n,
-               top3: CGFloat(inTop3) / n
+               accuracy: Double(correct) / n,
+               top3: Double(inTop3) / n
            )
        }
     

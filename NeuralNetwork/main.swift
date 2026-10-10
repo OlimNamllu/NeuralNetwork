@@ -10,7 +10,7 @@ import Foundation
 
 // MARK: - Saving Parameters
 
-func writeParameters(_ params: [CGFloat], delete: Bool = false) {
+func writeParameters(_ params: [Double], delete: Bool = false) {
     let swift = "\(params) \n \n"
     
     if let fileHandle = try? FileHandle(forWritingTo: URL(filePath: getPath(filename: "Parameters.json"))) {
@@ -27,13 +27,13 @@ func writeParameters(_ params: [CGFloat], delete: Bool = false) {
 
 // MARK: - Saving Parameters
 
-var scores: [CGFloat] = []
+var scores: [Double] = []
 
 let path2 = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/Scores.swift"
 let url2 = URL(fileURLWithPath: path2)
 
-func writeScores(_ scores: [CGFloat], title: String) {
-    let swift = "let scores\(title): [CGFloat] = \(scores) \n \n"
+func writeScores(_ scores: [Double], title: String) {
+    let swift = "let scores\(title): [Double] = \(scores) \n \n"
     
     if let fileHandle = try? FileHandle(forWritingTo: url2) {
         defer { try? fileHandle.close() } // Always close the file stream
@@ -45,17 +45,17 @@ func writeScores(_ scores: [CGFloat], title: String) {
 }
 
 func regenerateComputerRandom() {
-    var computerRandoms: [[CGFloat]] = []
+    var computerRandoms: [[Double]] = []
     print("\(humanSamples.count) human samples. Generating \(humanSamples.count) computer samples")
     for _ in 0..<humanSamples.count {
-        var number = [CGFloat]()
+        var number = [Double]()
         
         for _ in 0..<16 {
             let int = Int.random(in: 0..<10)
             
-            let cgFloat = CGFloat(int)
+            let Double = Double(int)
             
-            number.append(cgFloat)
+            number.append(Double)
         }
         
         computerRandoms.append(number)
@@ -64,8 +64,8 @@ func regenerateComputerRandom() {
     let dataPath = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/Data.swift"
     let dataurl = URL(fileURLWithPath: dataPath)
 
-    func writeData(_ numbers: [[CGFloat]]) {
-        let swift = "let machineSamples: [[CGFloat]] = \(numbers) \n \n"
+    func writeData(_ numbers: [[Double]]) {
+        let swift = "let machineSamples: [[Double]] = \(numbers) \n \n"
         
         if let fileHandle = try? FileHandle(forWritingTo: dataurl) {
             defer { try? fileHandle.close() } // Always close the file stream
@@ -86,15 +86,15 @@ func getPath(filename: String) -> String {
     return (getUser() + filename)
 }
 
-func fetchParameters() -> [CGFloat] {
+func fetchParameters() -> [Double] {
     let decoder = JSONDecoder()
     let url = URL(filePath: getPath(filename: "Parameters.json"))
     
     let data = try! Data(contentsOf: url)
-    var result = [CGFloat]()
+    var result = [Double]()
     
     do {
-        result = try decoder.decode([CGFloat].self, from: data)
+        result = try decoder.decode([Double].self, from: data)
     } catch {
         print("JSON decoder is selling")
     }

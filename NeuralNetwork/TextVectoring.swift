@@ -25,19 +25,19 @@ let alphabetDictionary: [Character: Int] = Dictionary(
 
 
 
-func characterToVector(_ character: Character) -> [CGFloat]? {
+func characterToVector(_ character: Character) -> [Double]? {
     guard let index = alphabetDictionary[character] else { return nil }
     let size = alphabetDictionary.count
-    var vector = Array(repeating: CGFloat(0), count: size)
+    var vector = Array(repeating: Double(0), count: size)
     vector[index] = 1
     return vector
 }
 
 
-func generateOneHotVectors(for string: String) -> [CGFloat] {
+func generateOneHotVectors(for string: String) -> [Double] {
     let context = string.rightAligned(toLength: textContextSize)
     
-    var oneHotVecotors: [CGFloat] = []
+    var oneHotVecotors: [Double] = []
     
     for character in context {
         if let vector = characterToVector(character) {
