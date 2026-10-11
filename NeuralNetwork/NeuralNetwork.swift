@@ -29,7 +29,8 @@ struct CapturedNeurons {
 
 
 class NeuralNetwork {
-    static let layers = [2, 3, 3, 2]
+//    static let layers = [textContextSize * vocab.count, 324, vocab.count]
+    static let layers = [4, 4, 4, 4]
     
     struct HiddenLayer: Equatable {
         var biases: [Double]
@@ -205,15 +206,19 @@ class NeuralNetwork {
     
     // MARK: - Backpropagation
     func backprop(iterations: Int, learnRate: Double, batchSize: Int) {
-        for _ in 0..<iterations {
+        
+        for i in 0..<iterations {
+            if i % 20 == 0 {
+                print("Iteration: \(i), \(network.evaluate(on: validationStarts))")
+            }
             // define partials
             var inputWeightPartials: [[Double]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
             var outputBiasPartials: [Double] = Array(repeating: 0, count: Self.layers.last!)
             var middleBiasPartials: [[Double]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
-                Array(repeating: 0, count: Self.layers[layerNum.0])
+                Array(repeating: 0, count: Self.layers[layerNum.0 + 1])
             }
             var middleWeightPartials: [[[Double]]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
-                Array(repeating: Array(repeating: 0, count: Self.layers[layerNum.0 + 1]), count: Self.layers[layerNum.0])
+                Array(repeating: Array(repeating: 0, count: Self.layers[layerNum.0 + 2]), count: Self.layers[layerNum.0 + 1])
             }
             
             for _ in 0..<batchSize {
@@ -260,24 +265,24 @@ class NeuralNetwork {
                 
             }
             
-            let factor = learnRate/Double(batchSize)
+            let factor = learnRate / Double(batchSize)
             
             for j in 0..<inputWeightPartials.count {
                 vDSP.multiply(factor, inputWeightPartials[j], result: &inputWeightPartials[j])
                 for (index, k) in inputWeightPartials[j].enumerated() {
-                    inputWeights[j][index] = k
+                    inputWeights[j][index] -= k
                 }
             }
             
             vDSP.multiply(factor, outputBiasPartials, result: &outputBiasPartials)
             for (index, k) in outputBiasPartials.enumerated() {
-                outputBiases[index] = k
+                outputBiases[index] -= k
             }
             
             for j in 0..<middleBiasPartials.count {
                 vDSP.multiply(factor, middleBiasPartials[j], result: &middleBiasPartials[j])
                 for (index, k) in middleBiasPartials[j].enumerated() {
-                    hiddenLayers[j].biases[index] = k
+                    hiddenLayers[j].biases[index] -= k
                 }
             }
             
@@ -285,7 +290,7 @@ class NeuralNetwork {
                 for k in 0..<middleWeightPartials[j].count {
                     vDSP.multiply(factor, middleWeightPartials[j][k], result: &middleWeightPartials[j][k])
                     for (index, l) in middleWeightPartials[j][k].enumerated() {
-                        hiddenLayers[j].weights[k][index] = l
+                        hiddenLayers[j].weights[k][index] -= l
                     }
                 }
             }

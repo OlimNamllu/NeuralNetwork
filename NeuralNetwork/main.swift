@@ -44,46 +44,11 @@ func writeScores(_ scores: [Double], title: String) {
     }
 }
 
-func regenerateComputerRandom() {
-    var computerRandoms: [[Double]] = []
-    print("\(humanSamples.count) human samples. Generating \(humanSamples.count) computer samples")
-    for _ in 0..<humanSamples.count {
-        var number = [Double]()
-        
-        for _ in 0..<16 {
-            let int = Int.random(in: 0..<10)
-            
-            let Double = Double(int)
-            
-            number.append(Double)
-        }
-        
-        computerRandoms.append(number)
-    }
-
-    let dataPath = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/Data.swift"
-    let dataurl = URL(fileURLWithPath: dataPath)
-
-    func writeData(_ numbers: [[Double]]) {
-        let swift = "let machineSamples: [[Double]] = \(numbers) \n \n"
-        
-        if let fileHandle = try? FileHandle(forWritingTo: dataurl) {
-            defer { try? fileHandle.close() } // Always close the file stream
-            let _ = try? fileHandle.seekToEnd()
-            if let data = swift.data(using: .utf8) {
-                try? fileHandle.write(contentsOf: data)
-            }
-        }
-    }
-
-    writeData(computerRandoms)
-}
-
 var tim = "/Users/tim/Documents/neural_network/NeuralNetwork/"
 var milo = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/"
 
 func getPath(filename: String) -> String {
-    return ""
+    return milo + filename
 }
 
 func fetchParameters() -> [Double] {
@@ -106,6 +71,4 @@ func fetchParameters() -> [Double] {
 
 // MARK: - EXECUTE
 
-var network = NeuralNetwork()
-
-
+let trainingData:
