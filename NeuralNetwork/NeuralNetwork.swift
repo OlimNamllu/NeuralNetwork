@@ -13,15 +13,23 @@ struct CapturedNeurons {
         self.outputNeurons = []
         self.hiddenLayers = []
     }
+    
+    var description: String {
+        let inputs = "\nInputs: \(inputNeurons)"
+        let outputs = "\nOutputs: \(outputNeurons)"
+        
+        var hidden = "\nHidden: "
+        for (index, layer) in hiddenLayers.enumerated() {
+            hidden.append("\nLayer \(index): \(layer)")
+        }
+        
+        return inputs + hidden + outputs
+    }
 }
 
 
-
-
 class NeuralNetwork {
-    // static let layers = [textContextSize * 27, 312, 27]
-    
-    static let layers = [2, 3, 4, 2]
+    static let layers = [2, 3, 3, 2]
     
     struct HiddenLayer: Equatable {
         var biases: [Double]
@@ -41,7 +49,6 @@ class NeuralNetwork {
             }
         }
     }
-    
     
     var hiddenLayers: [HiddenLayer] = {
         var newLayers = layers
@@ -63,7 +70,6 @@ class NeuralNetwork {
     
     var outputBiases: [Double] = (0..<layers.last!).map { _ in Double.random(in: -0.1...0.1) }
     
-    
     struct Metrics {
         var mse: Double
         var accuracy: Double
@@ -73,8 +79,6 @@ class NeuralNetwork {
             return "MSE: \(mse), ACCURACY: \(accuracy), TOP3: \(top3)"
         }
     }
-    
-
     
     func saveParameters(_ params: [Double]) {
         let expectedCount = {
@@ -161,37 +165,35 @@ class NeuralNetwork {
     
     enum NetworkErrors: Error {
            case invalidInputs
-       }
+    }
        
+    //    func mapRange(_ x: Double) -> Double {
+    //        return (2.0 / 9.0) * x - 1.0
+    //    }
        
-       //    func mapRange(_ x: Double) -> Double {
-       //        return (2.0 / 9.0) * x - 1.0
-       //    }
-       
-       enum RandomNumberType {
-           case human
-           case computer
-           case logicError
-       }
-       
-       static func cost(output: [Double], answer: [Double]) -> Double {
-           guard output.count == Self.layers.last else { return Double.infinity }
-           guard answer.count == Self.layers.last else { return Double.infinity }
-           
-           var sum: Double = 0
-           
-           for (output, answer) in zip(output, answer) {
-               sum += pow(output - answer, 2)
-           }
-           
-           
-           return sum
-       }
-       
-       func tanhDerivative(_ postActivation: Double) -> Double {
-           return 1 - pow(postActivation, 2)
-       }
-       
+    enum RandomNumberType {
+        case human
+        case computer
+        case logicError
+    }
+    
+    static func cost(output: [Double], answer: [Double]) -> Double {
+        guard output.count == Self.layers.last else { return Double.infinity }
+        guard answer.count == Self.layers.last else { return Double.infinity }
+        
+        var sum: Double = 0
+        
+        for (output, answer) in zip(output, answer) {
+            sum += pow(output - answer, 2)
+        }
+        
+        
+        return sum
+    }
+    
+    func tanhDerivative(_ postActivation: Double) -> Double {
+        return 1 - pow(postActivation, 2)
+    }
     
     func flattenArray2D(_ input: [[Double]]) -> (Int, Int, [Double]) {
         return (input.count, input.first!.count, input.flatMap() {$0})
@@ -201,9 +203,7 @@ class NeuralNetwork {
         return (input.count, input.first!.count, input.first!.first!.count, input.flatMap() {$0.flatMap(){$0}})
     }
     
-    
-    
-       // MARK: - Backpropagation
+    // MARK: - Backpropagation
     func backprop(iterations: Int, learnRate: Double, batchSize: Int) {
         for _ in 0..<iterations {
             // define partials
@@ -291,83 +291,135 @@ class NeuralNetwork {
             }
         }
     }
-       
-       func prediction(from context: String) -> String {
-           let inputs = generateOneHotVectors(for: context)
-           let (outputs, _) = run(inputs)
-           return softmax(outputs)
-       }
-       
-       func generate(from context: String, characters: Int) -> String {
-           var result = context
-           for _ in 0..<characters {
-               result.append(prediction(from: result))
-           }
-           return result
-       }
-       
-       func argmax(_ outputs: [Double]) -> String {
-           var max: (value: Double, index: Int) = (-Double.infinity, 0)
-           for (i, o) in outputs.enumerated() {
-               if o > max.value { max.value = o; max.index = i }
-           }
-           return String(vocab[max.index])
-       }
-       
-       func softmax(_ outputs: [Double], temperature: Double = 0.08) -> String {
-           let scaled = outputs.map { $0 / temperature }
-           let m = scaled.max()!
-           let exps = scaled.map { exp(($0 - m)) }
-           let sum = exps.reduce(0, +)
-           
-           var r = Double.random(in: 0..<sum)
-           for (k, e) in exps.enumerated() {
-               r -= e
-               if r <= 0 { return String(vocab[k]) }
-           }
-           return String(vocab[exps.count - 1])
-       }
-       
-       
-       func run(_ inputs: [Double]) -> ([Double], CapturedNeurons) {
-           
-       }
-
-       func evaluate(on starts: [Int]) -> Metrics {
-           var squaredError: Double = 0
-           var correct = 0
-           var inTop3 = 0
-           
-           for start in starts {
-               let input = encode(startingAt: start)
-               let target = makeTarget(startingAt: start)
-               let answer = sampleData[start + textContextSize]
-               let output = self.run(input).0
-               
-               for k in 0..<27 {
-                   let e = output[k] - target[k]
-                   squaredError += e * e
-               }
-               
-               // argmax
-               var best = 0
-               for k in 1..<27 where output[k] > output[best] { best = k }
-               if best == answer { correct += 1 }
-               
-               // is the true answer among the three highest outputs?
-               var betterCount = 0
-               for k in 0..<27 where output[k] > output[answer] { betterCount += 1 }
-               if betterCount < 3 { inTop3 += 1 }
-           }
-           
-           let n = Double(starts.count)
-           
-           return Metrics(
-               mse: squaredError / (n * 27),
-               accuracy: Double(correct) / n,
-               top3: Double(inTop3) / n
-           )
-       }
+     
+    func prediction(from context: String) -> String {
+        let inputs = generateOneHotVectors(for: context)
+        let (outputs, _) = run(inputs)
+        return softmax(outputs)
+    }
     
+    func generate(from context: String, characters: Int) -> String {
+        var result = context
+        for _ in 0..<characters {
+            result.append(prediction(from: result))
+        }
+        return result
+    }
+    
+    func argmax(_ outputs: [Double]) -> String {
+        var max: (value: Double, index: Int) = (-Double.infinity, 0)
+        for (i, o) in outputs.enumerated() {
+            if o > max.value { max.value = o; max.index = i }
+        }
+        return String(vocab[max.index])
+    }
+    
+    func softmax(_ outputs: [Double], temperature: Double = 0.08) -> String {
+        let scaled = outputs.map { $0 / temperature }
+        let m = scaled.max()!
+        let exps = scaled.map { exp(($0 - m)) }
+        let sum = exps.reduce(0, +)
+        
+        var r = Double.random(in: 0..<sum)
+        for (k, e) in exps.enumerated() {
+            r -= e
+            if r <= 0 { return String(vocab[k]) }
+        }
+        return String(vocab[exps.count - 1])
+    }
+       
+    func run(_ inputs: [Double]) -> ([Double], CapturedNeurons) {
+        guard inputs.count == Self.layers[0] else {
+            fatalError("Input count mismatch")
+        }
+        
+        let mapped = inputs
+        
+        var neurons = CapturedNeurons()
+        neurons.inputNeurons = mapped
+        
+
+        neurons.hiddenLayers = (0..<hiddenLayers.count).map { layerIndex in
+            Array(repeating: 0.0, count: Self.layers[layerIndex + 1])
+        }
+
+        neurons.outputNeurons = Array(repeating: 0.0, count: Self.layers.last!)
+        
+        let outputLayer = Self.layers.count - 1
+
+        var currentValues = mapped
+        for layer in 1...outputLayer {
+            for neuron in 0..<Self.layers[layer] {
+                var sum: Double = 0
+
+                for (index, input) in currentValues.enumerated() {
+//                    if input == 0 { continue }
+
+                    var scaled: Double = 0
+
+                    if layer == 1 {
+                        scaled = input * inputWeights[index][neuron]
+                    } else {
+                        scaled = input * hiddenLayers[layer - 2].weights[index][neuron]
+                    }
+
+                    sum += scaled
+                }
+
+                if layer == outputLayer {
+                    sum += outputBiases[neuron]
+                    neurons.outputNeurons[neuron] = tanh(sum)
+                } else {
+                    sum += hiddenLayers[layer - 1].biases[neuron]
+                    neurons.hiddenLayers[layer - 1][neuron] = tanh(sum)
+                }
+
+            }
+
+            if layer == outputLayer {
+                currentValues = neurons.outputNeurons
+            } else {
+                currentValues = neurons.hiddenLayers[layer - 1]
+            }
+        }
+        
+        return (currentValues, neurons)
+    }
+    
+    func evaluate(on starts: [Int]) -> Metrics {
+        var squaredError: Double = 0
+        var correct = 0
+        var inTop3 = 0
+        
+        for start in starts {
+            let input = encode(startingAt: start)
+            let target = makeTarget(startingAt: start)
+            let answer = sampleData[start + textContextSize]
+            let output = self.run(input).0
+            
+            for k in 0..<27 {
+                let e = output[k] - target[k]
+                squaredError += e * e
+            }
+            
+            // argmax
+            var best = 0
+            for k in 1..<27 where output[k] > output[best] { best = k }
+            if best == answer { correct += 1 }
+            
+            // is the true answer among the three highest outputs?
+            var betterCount = 0
+            for k in 0..<27 where output[k] > output[answer] { betterCount += 1 }
+            if betterCount < 3 { inTop3 += 1 }
+        }
+        
+        let n = Double(starts.count)
+        
+        return Metrics(
+            mse: squaredError / (n * 27),
+            accuracy: Double(correct) / n,
+            top3: Double(inTop3) / n
+        )
+    }
 }
 
