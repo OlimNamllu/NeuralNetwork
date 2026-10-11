@@ -30,7 +30,7 @@ struct CapturedNeurons {
 
 class NeuralNetwork {
 //    static let layers = [textContextSize * vocab.count, 324, vocab.count]
-    static let layers = [4, 4, 4, 4]
+    static let layers = [textContextSize * vocab.count, 324, 144, vocab.count]
     
     struct HiddenLayer: Equatable {
         var biases: [Double]
@@ -209,7 +209,7 @@ class NeuralNetwork {
         
         for i in 0..<iterations {
             if i % 20 == 0 {
-                print("Iteration: \(i), \(network.evaluate(on: validationStarts))")
+                print("Iteration: \(i), \(self.evaluate(on: validationStarts))")
             }
             // define partials
             var inputWeightPartials: [[Double]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
@@ -223,8 +223,8 @@ class NeuralNetwork {
             
             for _ in 0..<batchSize {
                 // Reference point: PREACTIVATION
-                var referenceMatrix: [[Double]] = Array(repeating: 0, count: Self.layers.count).enumerated().map { layerNum in
-                    Array(repeating: 0, count: Self.layers[layerNum.0])
+                var referenceMatrix: [[Double]] = Array(repeating: 0, count: Self.layers.count-1).enumerated().map { layerNum in
+                    Array(repeating: 0, count: Self.layers[layerNum.0 + 1])
                 }
                 
                 let seed = sampleSeed

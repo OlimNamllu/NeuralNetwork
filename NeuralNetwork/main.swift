@@ -48,7 +48,7 @@ var tim = "/Users/tim/Documents/neural_network/NeuralNetwork/"
 var milo = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/"
 
 func getPath(filename: String) -> String {
-    return milo + filename
+    return tim + filename
 }
 
 func fetchParameters() -> [Double] {
@@ -71,4 +71,8 @@ func fetchParameters() -> [Double] {
 
 // MARK: - EXECUTE
 
-let trainingData:
+var network = NeuralNetwork()
+
+network.backprop(iterations: 10000, learnRate: 0.01, batchSize: 50)
+
+print(network.generate(from: "ultraviolet is a rotational", characters: 200))
