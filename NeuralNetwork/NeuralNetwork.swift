@@ -228,7 +228,7 @@ class NeuralNetwork {
                 }
                 
                 let seed = sampleSeed
-                let inputs = encode(startingAt: seed)
+                let inputs = encode(startingAt: seed, noise: 0.04)
                 let target = makeTarget(startingAt: seed)
                 
                 let datum: ([Double], [Double]) = (inputs, target)
