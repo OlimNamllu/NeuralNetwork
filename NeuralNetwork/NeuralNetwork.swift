@@ -30,7 +30,7 @@ struct CapturedNeurons {
 
 class NeuralNetwork {
 //    static let layers = [textContextSize * vocab.count, 324, vocab.count]
-    static let layers = [textContextSize * vocab.count, 324, 144, vocab.count]
+    static let layers = [textContextSize * vocab.count, 256, 180, vocab.count]
     
     struct HiddenLayer: Equatable {
         var biases: [Double]
@@ -228,7 +228,7 @@ class NeuralNetwork {
                 }
                 
                 let seed = sampleSeed
-                let inputs = encode(startingAt: sampleSeed)
+                let inputs = encode(startingAt: seed)
                 let target = makeTarget(startingAt: seed)
                 
                 let datum: ([Double], [Double]) = (inputs, target)
@@ -240,7 +240,7 @@ class NeuralNetwork {
                 for (index, outputNeuron) in captured.outputNeurons.enumerated() {
                     outputBiasPartials[index] += 2 * (outputNeuron - datum.1[index]) * tanhDerivative(outputNeuron)
                     
-                    referenceMatrix[referenceMatrix.count - 1][index] = (outputNeuron - datum.1[index]) * tanhDerivative(outputNeuron)
+                    referenceMatrix[referenceMatrix.count - 1][index] = 2 * (outputNeuron - datum.1[index]) * tanhDerivative(outputNeuron)
                 }
                 
                 for (index, middleLayer) in captured.hiddenLayers.reversed().enumerated() {

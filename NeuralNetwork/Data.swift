@@ -40,14 +40,14 @@ let sampleData: [Int] = {
     print("corpus loaded: \(mapped.count) characters")
     return mapped
 }()  // count is 38015
-let textContextSize: Int = 15
+let textContextSize: Int = 16
 
 var sampleSeed: Int {
-    return Int.random(in: 4..<24_000)
+    return Int.random(in: 4..<36_000)
 }
 
 var validationStarts: [Int] {
-    return Array(18000..<18500)
+    return Array(37000..<38000)
 }
 
 
