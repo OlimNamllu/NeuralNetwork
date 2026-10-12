@@ -104,10 +104,8 @@ class NeuralNetwork {
             
         }
         
-        print("after inputs: \(currentIndex)")
                 
         for (index, layer) in hiddenLayers.enumerated() {
-            print("rep: \(currentIndex)")
 
             let biasesStartIndex = currentIndex
             let biasesEndIndex = currentIndex + layer.biases.count
@@ -116,7 +114,6 @@ class NeuralNetwork {
                 hiddenLayers[index].biases[i - biasesStartIndex] = params[i]
                 currentIndex += 1
             }
-            print("poop: \(currentIndex)")
 
             let weightsStartIndex = currentIndex
             let weightsEndIndex = currentIndex + layer.weights.count * layer.weights.first!.count
@@ -135,9 +132,6 @@ class NeuralNetwork {
                 currentIndex += 1
             }
         }
-        
-        print("after middle: \(currentIndex)")
-
         
         // 4. Reconstruct outputBiases (layers[2])
         let outputBiasesEnd = currentIndex + Self.layers.last!
@@ -205,11 +199,11 @@ class NeuralNetwork {
     }
     
     // MARK: - Backpropagation
-    func backprop(iterations: Int, learnRate: Double, batchSize: Int) {
+    func backprop(iterations: Int, learnRate: Double, batchSize: Int, noise: Double = 0.03) {
         
         for i in 0..<iterations {
-            if i % 20 == 0 {
-                print("Iteration: \(i), \(self.evaluate(on: validationStarts))")
+            if i % 100 == 0 {
+                print("Iteration: \(i), TEST: \(self.evaluate(on: validationStarts).printOut()), TRAINED: \(self.evaluate(on: trainedStarts).printOut())")
             }
             // define partials
             var inputWeightPartials: [[Double]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
@@ -228,7 +222,7 @@ class NeuralNetwork {
                 }
                 
                 let seed = sampleSeed
-                let inputs = encode(startingAt: seed, noise: 0.04)
+                let inputs = encode(startingAt: seed, noise: noise)
                 let target = makeTarget(startingAt: seed)
                 
                 let datum: ([Double], [Double]) = (inputs, target)
@@ -267,30 +261,38 @@ class NeuralNetwork {
             
             let factor = learnRate / Double(batchSize)
             
-            for j in 0..<inputWeightPartials.count {
-                vDSP.multiply(factor, inputWeightPartials[j], result: &inputWeightPartials[j])
-                for (index, k) in inputWeightPartials[j].enumerated() {
-                    inputWeights[j][index] -= k
+            Task {
+                for j in 0..<inputWeightPartials.count {
+                    vDSP.multiply(factor, inputWeightPartials[j], result: &inputWeightPartials[j])
+                    for (index, k) in inputWeightPartials[j].enumerated() {
+                        inputWeights[j][index] -= k
+                    }
                 }
             }
             
-            vDSP.multiply(factor, outputBiasPartials, result: &outputBiasPartials)
-            for (index, k) in outputBiasPartials.enumerated() {
-                outputBiases[index] -= k
-            }
-            
-            for j in 0..<middleBiasPartials.count {
-                vDSP.multiply(factor, middleBiasPartials[j], result: &middleBiasPartials[j])
-                for (index, k) in middleBiasPartials[j].enumerated() {
-                    hiddenLayers[j].biases[index] -= k
+            Task {
+                vDSP.multiply(factor, outputBiasPartials, result: &outputBiasPartials)
+                for (index, k) in outputBiasPartials.enumerated() {
+                    outputBiases[index] -= k
                 }
             }
             
-            for j in 0..<middleWeightPartials.count {
-                for k in 0..<middleWeightPartials[j].count {
-                    vDSP.multiply(factor, middleWeightPartials[j][k], result: &middleWeightPartials[j][k])
-                    for (index, l) in middleWeightPartials[j][k].enumerated() {
-                        hiddenLayers[j].weights[k][index] -= l
+            Task {
+                for j in 0..<middleBiasPartials.count {
+                    vDSP.multiply(factor, middleBiasPartials[j], result: &middleBiasPartials[j])
+                    for (index, k) in middleBiasPartials[j].enumerated() {
+                        hiddenLayers[j].biases[index] -= k
+                    }
+                }
+            }
+            
+            Task {
+                for j in 0..<middleWeightPartials.count {
+                    for k in 0..<middleWeightPartials[j].count {
+                        vDSP.multiply(factor, middleWeightPartials[j][k], result: &middleWeightPartials[j][k])
+                        for (index, l) in middleWeightPartials[j][k].enumerated() {
+                            hiddenLayers[j].weights[k][index] -= l
+                        }
                     }
                 }
             }
@@ -319,7 +321,7 @@ class NeuralNetwork {
         return String(vocab[max.index])
     }
     
-    func softmax(_ outputs: [Double], temperature: Double = 0.08) -> String {
+    func softmax(_ outputs: [Double], temperature: Double = 0.001) -> String {
         let scaled = outputs.map { $0 / temperature }
         let m = scaled.max()!
         let exps = scaled.map { exp(($0 - m)) }

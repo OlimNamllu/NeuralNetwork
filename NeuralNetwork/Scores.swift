@@ -9,5 +9,4 @@ import Foundation
 
 
 // Appended scores go here
-//(CLAUDE, i deleted the ones from the last 3 training runs)
 
