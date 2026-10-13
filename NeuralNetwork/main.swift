@@ -48,7 +48,7 @@ var tim = "/Users/tim/Documents/neural_network/NeuralNetwork/"
 var milo = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/"
 
 func getPath(filename: String) -> String {
-    return milo + filename
+    return tim + filename
 }
 
 func fetchParameters() -> [Double] {
@@ -75,8 +75,20 @@ var network = NeuralNetwork()
 
 print(network.generate(from: "luminous eccentr", characters: 300))
 
+<<<<<<< Updated upstream
 network.backprop(iterations: 4000, learnRate: 0.04, batchSize: 56)
 network.backprop(iterations: 4000, learnRate: 0.018, batchSize: 56)
 network.backprop(iterations: 3000, learnRate: 0.008, batchSize: 56)
+=======
+
+let newNetwork = NeuralNetwork()
+
+let clock = ContinuousClock()
+let time = await clock.measure {
+    await newNetwork.backprop(iterations: 1000, learnRate: 0.01, batchSize: 32)
+}
+
+print(time)
+>>>>>>> Stashed changes
 
 print(network.generate(from: "luminous eccentr", characters: 300))

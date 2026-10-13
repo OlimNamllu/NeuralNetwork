@@ -3,6 +3,46 @@ import Accelerate
 
 // MARK: - Network
 
+actor Incrementer {
+    var data = 0
+    func increment() {
+        data += 1
+    }
+}
+
+actor ActorArray<T> {
+    
+    var data: [T]
+    
+    init(array: [T]) {
+        data = array
+    }
+    
+    func add1d(index: Int, addend: Double) {
+        var enforcedArray = (data as? [Double])!
+        
+        enforcedArray[index] += addend
+        
+        data = (enforcedArray as? [T])!
+    }
+    
+    func add2d(index: Int, syndex: Int, addend: Double) {
+        var enforcedArray = (data as? [[Double]])!
+        
+        enforcedArray[index][syndex] += addend
+        
+        data = (enforcedArray as? [T])!
+    }
+    
+    func add3d(index: Int, syndex: Int, lindex: Int, addend: Double) {
+        var enforcedArray = (data as? [[[Double]]])!
+        
+        enforcedArray[index][syndex][lindex] += addend
+        
+        data = (enforcedArray as? [T])!
+    }
+}
+
 struct CapturedNeurons {
     var inputNeurons: [Double]
     var outputNeurons: [Double]
@@ -29,7 +69,7 @@ struct CapturedNeurons {
 
 
 class NeuralNetwork {
-//    static let layers = [textContextSize * vocab.count, 324, vocab.count]
+    //    static let layers = [textContextSize * vocab.count, 324, vocab.count]
     static let layers = [textContextSize * vocab.count, 256, 180, vocab.count]
     
     struct HiddenLayer: Equatable {
@@ -104,11 +144,17 @@ class NeuralNetwork {
             
         }
         
+<<<<<<< Updated upstream
         print("after inputs: \(currentIndex)")
                 
         for (index, layer) in hiddenLayers.enumerated() {
             print("rep: \(currentIndex)")
 
+=======
+        
+        for (index, layer) in hiddenLayers.enumerated() {
+            
+>>>>>>> Stashed changes
             let biasesStartIndex = currentIndex
             let biasesEndIndex = currentIndex + layer.biases.count
             
@@ -116,8 +162,12 @@ class NeuralNetwork {
                 hiddenLayers[index].biases[i - biasesStartIndex] = params[i]
                 currentIndex += 1
             }
+<<<<<<< Updated upstream
             print("poop: \(currentIndex)")
 
+=======
+            
+>>>>>>> Stashed changes
             let weightsStartIndex = currentIndex
             let weightsEndIndex = currentIndex + layer.weights.count * layer.weights.first!.count
             
@@ -165,13 +215,13 @@ class NeuralNetwork {
     }
     
     enum NetworkErrors: Error {
-           case invalidInputs
+        case invalidInputs
     }
-       
+    
     //    func mapRange(_ x: Double) -> Double {
     //        return (2.0 / 9.0) * x - 1.0
     //    }
-       
+    
     enum RandomNumberType {
         case human
         case computer
@@ -205,22 +255,27 @@ class NeuralNetwork {
     }
     
     // MARK: - Backpropagation
+<<<<<<< Updated upstream
     func backprop(iterations: Int, learnRate: Double, batchSize: Int) {
+=======
+    func backprop(iterations: Int, learnRate: Double, batchSize: Int, noise: Double = 0.03) async {
+>>>>>>> Stashed changes
         
         for i in 0..<iterations {
             if i % 20 == 0 {
                 print("Iteration: \(i), \(self.evaluate(on: validationStarts))")
             }
             // define partials
-            var inputWeightPartials: [[Double]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
-            var outputBiasPartials: [Double] = Array(repeating: 0, count: Self.layers.last!)
-            var middleBiasPartials: [[Double]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
+            var inputWeightPartials: ActorArray<[Double]> = ActorArray(array: Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0]))
+            var outputBiasPartials: ActorArray<Double> = ActorArray(array: Array(repeating: 0, count: Self.layers.last!))
+            var middleBiasPartials: ActorArray<[Double]> = ActorArray(array: Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
                 Array(repeating: 0, count: Self.layers[layerNum.0 + 1])
-            }
-            var middleWeightPartials: [[[Double]]] = Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
+            })
+            var middleWeightPartials: ActorArray<[[Double]]> = ActorArray(array: Array(repeating: 0, count: Self.layers.count - 2).enumerated().map { layerNum in
                 Array(repeating: Array(repeating: 0, count: Self.layers[layerNum.0 + 2]), count: Self.layers[layerNum.0 + 1])
-            }
+            })
             
+<<<<<<< Updated upstream
             for _ in 0..<batchSize {
                 // Reference point: PREACTIVATION
                 var referenceMatrix: [[Double]] = Array(repeating: 0, count: Self.layers.count-1).enumerated().map { layerNum in
@@ -251,29 +306,75 @@ class NeuralNetwork {
                             referenceMatrix[actualIndex][syndex] += tanhDerivative(middleNeuron) * hiddenLayers[actualIndex].weights[syndex][lindex] * referenceMatrix[actualIndex + 1][lindex]
                             
                             middleWeightPartials[actualIndex][syndex][lindex] += captured.hiddenLayers[actualIndex][syndex] * referenceMatrix[actualIndex+1][lindex]
+=======
+            
+            await withTaskGroup(of: Void.self, returning: Void.self) { group in
+                for i in 0..<batchSize {
+                    group.addTask {
+                        // Reference point: PREACTIVATION
+                        var referenceMatrix: [[Double]] = Array(repeating: 0, count: Self.layers.count-1).enumerated().map { layerNum in
+                            Array(repeating: 0, count: Self.layers[layerNum.0 + 1])
                         }
                         
-                        middleBiasPartials[actualIndex][syndex] += referenceMatrix[actualIndex][syndex]
+                        let seed = sampleSeed
+                        let inputs = encode(startingAt: seed, noise: noise)
+                        let target = makeTarget(startingAt: seed)
+                        
+                        let datum: ([Double], [Double]) = (inputs, target)
+                        
+                        let (_, captured) = self.run(datum.0)
+                        
+                        
+                        // add changes to partials
+                        for (index, outputNeuron) in captured.outputNeurons.enumerated() {
+                            await outputBiasPartials.add1d(index: index, addend: 2 * (outputNeuron - datum.1[index]) * self.tanhDerivative(outputNeuron))
+                            referenceMatrix[referenceMatrix.count - 1][index] = 2 * (outputNeuron - datum.1[index]) * self.tanhDerivative(outputNeuron)
+                        }
+                        
+                        for (index, middleLayer) in captured.hiddenLayers.reversed().enumerated() {
+                            let actualIndex = captured.hiddenLayers.count - index - 1
+                            for (syndex, middleNeuron) in middleLayer.enumerated() {
+                                //SET REFERENCE PARTIALS
+                                for (lindex) in 0..<(index==0 ? captured.outputNeurons : captured.hiddenLayers[actualIndex + 1]).count {
+                                    referenceMatrix[actualIndex][syndex] += self.tanhDerivative(middleNeuron) * self.hiddenLayers[actualIndex].weights[syndex][lindex] * referenceMatrix[actualIndex + 1][lindex]
+                                    
+                                    
+                                    await middleWeightPartials.add3d(index: actualIndex, syndex: syndex, lindex: lindex, addend: captured.hiddenLayers[actualIndex][syndex] * referenceMatrix[actualIndex+1][lindex])
+                                }
+                                
+                                await middleBiasPartials.add2d(index: actualIndex, syndex: syndex, addend: referenceMatrix[actualIndex][syndex])
+                            }
+                        }
+                        
+                        for (index, _) in captured.inputNeurons.enumerated() {
+                            for (syndex, _) in captured.hiddenLayers[0].enumerated() {
+                                await inputWeightPartials.add2d(index: index, syndex: syndex, addend: captured.inputNeurons[index] * referenceMatrix[0][syndex])
+                            }
+>>>>>>> Stashed changes
+                        }
+                        
                     }
                 }
-                
-                for (index, _) in captured.inputNeurons.enumerated() {
-                    for (syndex, _) in captured.hiddenLayers[0].enumerated() {
-                        inputWeightPartials[index][syndex] += captured.inputNeurons[index] * referenceMatrix[0][syndex]
-                    }
-                }
-                
             }
             
             let factor = learnRate / Double(batchSize)
             
+<<<<<<< Updated upstream
             for j in 0..<inputWeightPartials.count {
                 vDSP.multiply(factor, inputWeightPartials[j], result: &inputWeightPartials[j])
                 for (index, k) in inputWeightPartials[j].enumerated() {
+=======
+            var (inputWeightPartialsArray, outputBiasPartialsArray, middleWeightPartialsArray, middleBiasPartialsArray) = await (inputWeightPartials.data, outputBiasPartials.data, middleWeightPartials.data, middleBiasPartials.data)
+            
+            for j in 0..<inputWeightPartialsArray.count {
+                vDSP.multiply(factor, inputWeightPartialsArray[j], result: &inputWeightPartialsArray[j])
+                for (index, k) in inputWeightPartialsArray[j].enumerated() {
+>>>>>>> Stashed changes
                     inputWeights[j][index] -= k
                 }
             }
             
+<<<<<<< Updated upstream
             vDSP.multiply(factor, outputBiasPartials, result: &outputBiasPartials)
             for (index, k) in outputBiasPartials.enumerated() {
                 outputBiases[index] -= k
@@ -282,21 +383,38 @@ class NeuralNetwork {
             for j in 0..<middleBiasPartials.count {
                 vDSP.multiply(factor, middleBiasPartials[j], result: &middleBiasPartials[j])
                 for (index, k) in middleBiasPartials[j].enumerated() {
+=======
+            vDSP.multiply(factor, outputBiasPartialsArray, result: &outputBiasPartialsArray)
+            for (index, k) in outputBiasPartialsArray.enumerated() {
+                outputBiases[index] -= k
+            }
+            
+            for j in 0..<middleBiasPartialsArray.count {
+                vDSP.multiply(factor, middleBiasPartialsArray[j], result: &middleBiasPartialsArray[j])
+                for (index, k) in middleBiasPartialsArray[j].enumerated() {
+>>>>>>> Stashed changes
                     hiddenLayers[j].biases[index] -= k
                 }
             }
             
+<<<<<<< Updated upstream
             for j in 0..<middleWeightPartials.count {
                 for k in 0..<middleWeightPartials[j].count {
                     vDSP.multiply(factor, middleWeightPartials[j][k], result: &middleWeightPartials[j][k])
                     for (index, l) in middleWeightPartials[j][k].enumerated() {
+=======
+            for j in 0..<middleWeightPartialsArray.count {
+                for k in 0..<middleWeightPartialsArray[j].count {
+                    vDSP.multiply(factor, middleWeightPartialsArray[j][k], result: &middleWeightPartialsArray[j][k])
+                    for (index, l) in middleWeightPartialsArray[j][k].enumerated() {
+>>>>>>> Stashed changes
                         hiddenLayers[j].weights[k][index] -= l
                     }
                 }
             }
         }
     }
-     
+    
     func prediction(from context: String) -> String {
         let inputs = generateOneHotVectors(for: context)
         let (outputs, _) = run(inputs)
@@ -332,7 +450,7 @@ class NeuralNetwork {
         }
         return String(vocab[exps.count - 1])
     }
-       
+    
     func run(_ inputs: [Double]) -> ([Double], CapturedNeurons) {
         guard inputs.count == Self.layers[0] else {
             fatalError("Input count mismatch")
@@ -343,34 +461,34 @@ class NeuralNetwork {
         var neurons = CapturedNeurons()
         neurons.inputNeurons = mapped
         
-
+        
         neurons.hiddenLayers = (0..<hiddenLayers.count).map { layerIndex in
             Array(repeating: 0.0, count: Self.layers[layerIndex + 1])
         }
-
+        
         neurons.outputNeurons = Array(repeating: 0.0, count: Self.layers.last!)
         
         let outputLayer = Self.layers.count - 1
-
+        
         var currentValues = mapped
         for layer in 1...outputLayer {
             for neuron in 0..<Self.layers[layer] {
                 var sum: Double = 0
-
+                
                 for (index, input) in currentValues.enumerated() {
-//                    if input == 0 { continue }
-
+                    //                    if input == 0 { continue }
+                    
                     var scaled: Double = 0
-
+                    
                     if layer == 1 {
                         scaled = input * inputWeights[index][neuron]
                     } else {
                         scaled = input * hiddenLayers[layer - 2].weights[index][neuron]
                     }
-
+                    
                     sum += scaled
                 }
-
+                
                 if layer == outputLayer {
                     sum += outputBiases[neuron]
                     neurons.outputNeurons[neuron] = tanh(sum)
@@ -378,9 +496,9 @@ class NeuralNetwork {
                     sum += hiddenLayers[layer - 1].biases[neuron]
                     neurons.hiddenLayers[layer - 1][neuron] = tanh(sum)
                 }
-
+                
             }
-
+            
             if layer == outputLayer {
                 currentValues = neurons.outputNeurons
             } else {
