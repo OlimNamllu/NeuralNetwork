@@ -321,7 +321,7 @@ class NeuralNetwork {
         return String(vocab[max.index])
     }
     
-    func softmax(_ outputs: [Double], temperature: Double = 0.001) -> String {
+    func softmax(_ outputs: [Double], temperature: Double = 0.01) -> String {
         let scaled = outputs.map { $0 / temperature }
         let m = scaled.max()!
         let exps = scaled.map { exp(($0 - m)) }
