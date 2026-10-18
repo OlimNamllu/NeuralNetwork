@@ -7,6 +7,8 @@
 import Foundation
 import CoreGraphics
 import ImageIO
+import UniformTypeIdentifiers
+
 
 
 func fetchCGImagesFromLocalPath(folderPath: String) -> [CGImage] {
@@ -58,6 +60,7 @@ struct ImageDatum {
         var r: UInt8
         var g: UInt8
         var b: UInt8
+        var a: UInt8 = 255
     }
     
     struct BWPixel {
@@ -105,7 +108,7 @@ struct ImageDatum {
         
         self.RGB = []
         self.BW = []
-
+        
         let width = cgimage.width
         let height = cgimage.height
         let bytesPerRow = cgimage.bytesPerRow
@@ -113,7 +116,7 @@ struct ImageDatum {
         
         self.width = width
         self.height = height
-
+        
         for y in 0..<height {
             for x in 0..<width {
                 let offset = (y * bytesPerRow) + (x * bytesPerPixel)
@@ -128,6 +131,61 @@ struct ImageDatum {
             let grayscale = (pixel.r / 3) + (pixel.g / 3) + (pixel.b / 3)
             self.BW.append(BWPixel(c: grayscale))
         }
+    }
+    
+    func getCGImage() -> CGImage? {
+        
+        let data = NSData(bytes: RGB, length: 8 * 4 * height * width)
+        
+        guard let provider = CGDataProvider(data: data) else { return nil }
+        
+        return CGImage(
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bitsPerPixel: 8 * 4,
+            bytesPerRow: 4 * width,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: [CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                         .byteOrder32Big],
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent
+        )
+    }
+    
+    
+    
+    @discardableResult
+    static func exportCGImageToJpeg(img: CGImage, name: String, overrideName: String? = nil) -> Bool {
+        
+        var url = URL(string: getPath(filename: name))
+        
+        if overrideName != nil {
+            url = URL(string: overrideName!)
+        }
+        
+        guard let destUrl = url else { return false }
+        
+        // 1. Create the destination for the JPEG file
+        guard let destination = CGImageDestinationCreateWithURL(
+            destUrl as CFURL,
+            UTType.jpeg.identifier as CFString,
+            1, // Count of images in the file
+            nil
+        ) else {
+            return false
+        }
+        
+        // 2. Set the compression quality (0.0 to 1.0)
+        let options: [CFString: Any] = [
+            kCGImageDestinationLossyCompressionQuality: 1
+        ]
+        
+        // 3. Add the image and finalize the destination
+        CGImageDestinationAddImage(destination, img, options as CFDictionary)
+        return CGImageDestinationFinalize(destination)
     }
     
 }

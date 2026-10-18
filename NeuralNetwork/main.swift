@@ -69,7 +69,7 @@ var tim = "/Users/tim/Documents/neural_network/NeuralNetwork/"
 var milo = "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/"
 
 func getPath(filename: String) -> String {
-    return milo + filename
+    return tim + filename
 }
 
 
@@ -96,10 +96,14 @@ let iter30k5L = "iter30k5L.bin"
 // MARK: - EXECUTE
 var network = NeuralNetwork()
 
-let images = fetchCGImagesFromLocalPath(folderPath: "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/pumpkin")
+let images = fetchCGImagesFromLocalPath(folderPath: "/Users/tim/Documents/neural_network/NeuralNetwork/pumpkin")
 
-let sample = images.first!
+let sample = images[3]
+
 
 let datum = ImageDatum(cgimage: sample)
 
-print(datum.printOut())
+print(datum.unflattened.count)
+print(datum.unflattened.first!.count)
+
+ImageDatum.exportCGImageToJpeg(img: datum.getCGImage()!, name: "67skibidkidtoiletl", overrideName: "file:///Users/tim/Documents/neural_network/NeuralNetwork/67676.jpg")
