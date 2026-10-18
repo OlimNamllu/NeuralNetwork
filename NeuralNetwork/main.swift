@@ -101,9 +101,11 @@ let images = fetchCGImagesFromLocalPath(folderPath: "/Users/tim/Documents/neural
 let sample = images[3]
 
 
-let datum = ImageDatum(cgimage: sample)
+var datum = ImageDatum(cgimage: sample)
 
 print(datum.unflattened.count)
 print(datum.unflattened.first!.count)
+
+datum.RGB = datum.bwToRGB()
 
 ImageDatum.exportCGImageToJpeg(img: datum.getCGImage()!, name: "67skibidkidtoiletl", overrideName: "file:///Users/tim/Documents/neural_network/NeuralNetwork/67676.jpg")

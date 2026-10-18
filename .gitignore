@@ -2,4 +2,6 @@
 
 NeuralNetwork/Setup.swift
 
+NeuralNetwork/local/
+
 NeuralNetwork.xcodeproj/project.xcworkspace/xcuserdata/

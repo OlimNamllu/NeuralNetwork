@@ -155,6 +155,11 @@ struct ImageDatum {
         )
     }
     
+    func bwToRGB() -> [RGBPixel] {
+        return self.BW.map { element in
+            RGBPixel(r: element.c, g: element.c, b: element.c, a: 255)
+        }
+    }
     
     
     @discardableResult
