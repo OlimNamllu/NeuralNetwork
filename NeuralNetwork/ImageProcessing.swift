@@ -4,30 +4,54 @@
 //
 //  Created by Milo Ullman on 17/10/26.
 //
+import Foundation
 import CoreGraphics
 import ImageIO
-import Foundation
 
-let file = "pumpkin"
-let url = URL(filePath: getPath(filename: file))
 
-func loadCGImagesFromBundle(folderName: String) -> [CGImage] {
+func fetchCGImagesFromLocalPath(folderPath: String) -> [CGImage] {
+    // 1. Convert the string path to a standard file URL
+    // Resolving symlinks and expanding tilde (~) makes the path robust
+    let standardPath = (folderPath as NSString).expandingTildeInPath
+    let folderURL = URL(fileURLWithPath: standardPath, isDirectory: true)
+    
+    var cgImages: [CGImage] = []
     let fileManager = FileManager.default
-    guard let bundleURL = Bundle.main.resourceURL?.appendingPathComponent(folderName) else { return [] }
     
     do {
-        let fileURLs = try fileManager.contentsOfDirectory(at: bundleURL, includingPropertiesForKeys: nil)
-        let imageURLs = fileURLs.filter { ["jpg"].contains($0.pathExtension.lowercased()) }
+        // 2. Scan the physical directory contents on your Mac
+        let fileURLs = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)
         
-        return imageURLs.compactMap { url -> CGImage? in
-            guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
-            return CGImageSourceCreateImageAtIndex(imageSource, 0, nil)
+        // 3. Case-insensitive filter for JPG/JPEG extensions
+        let jpgURLs = fileURLs.filter {
+            let ext = $0.pathExtension.lowercased()
+            return ext == "jpg" || ext == "jpeg"
         }
+        
+        if jpgURLs.isEmpty {
+            print("Warning: No JPG images found at path: \(standardPath)")
+            return []
+        }
+        
+        // 4. Create CGImage directly from the local file URLs
+        for url in jpgURLs {
+            if let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil),
+               let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) {
+                cgImages.append(cgImage)
+            } else {
+                print("Failed to decode image at: \(url.lastPathComponent)")
+            }
+        }
+        
     } catch {
-        print("Error loading CGImages: \(error)")
-        return []
+        print("Error reading local directory: \(error.localizedDescription)")
     }
+    
+    // Returns the array of raw CGImage objects
+    return cgImages
 }
+
+
 
 struct ImageDatum {
     struct RGBPixel {
@@ -45,6 +69,31 @@ struct ImageDatum {
     
     var width: Int = 52
     var height: Int = 64
+    
+    var unflattened: [[RGBPixel]] {
+        var matrix: [[RGBPixel]] = []
+        
+        for rowStart in stride(from: 0, to: RGB.count, by: width) {
+            let rowEnd = min(rowStart + width, RGB.count)
+            let row = Array(RGB[rowStart..<rowEnd])
+            matrix.append(row)
+        }
+        return matrix
+    }
+    
+    func printOut() -> [[(Int, Int, Int)]] {
+        var output: [[(Int, Int, Int)]] = []
+        
+        for row in unflattened {
+            var inter: [(Int, Int, Int)] = []
+            for col in row {
+                inter.append((Int(col.r), Int(col.g), Int(col.b)))
+            }
+            
+            output.append(inter)
+        }
+        return output
+    }
     
     
     init(cgimage: CGImage) {

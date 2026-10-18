@@ -22,9 +22,31 @@
 		7279DF163020C82E00459296 /* NeuralNetwork */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = NeuralNetwork; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7219744D3084EF3A00230274 /* Exceptions for "NeuralNetwork" folder in "NeuralNetwork" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				iter18k5L.bin,
+				iter30k5L.bin,
+				iter36k.bin,
+				iter42k.bin,
+				onestar_corpus.txt,
+				"Parameters-after.bin",
+				"Parameters-before.bin",
+			);
+			target = 7279DF153020C82E00459296 /* NeuralNetwork */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7279DF183020C82E00459296 /* NeuralNetwork */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7219744D3084EF3A00230274 /* Exceptions for "NeuralNetwork" folder in "NeuralNetwork" target */,
+			);
+			explicitFolders = (
+				pumpkin,
+			);
 			path = NeuralNetwork;
 			sourceTree = "<group>";
 		};
@@ -67,6 +89,7 @@
 				7279DF123020C82E00459296 /* Sources */,
 				7279DF133020C82E00459296 /* Frameworks */,
 				7279DF143020C82E00459296 /* CopyFiles */,
+				7219744C3084EF3900230274 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -117,6 +140,16 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7219744C3084EF3900230274 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		7279DF123020C82E00459296 /* Sources */ = {

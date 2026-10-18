@@ -95,42 +95,11 @@ let iter30k5L = "iter30k5L.bin"
 
 // MARK: - EXECUTE
 var network = NeuralNetwork()
-//
-//print(network.generate(from: "the best plumber in town becau", characters: 300))
 
-// Fetch existing parameters
-//if let saved = readParameters(from: iter36k) {
-//    let expected = network.list().count
-//    if saved.count == expected {
-//        network.saveParameters(saved)
-//        print("Fetched \(saved.count) parameters from \(iter36k), resuming...")
-//    } else {
-//        print("\(iter36k) holds \(saved.count) parameters but this network wants \(expected); starting fresh")
-//    }
-//} else {
-//    print("no existing parameters")
-//}
+let images = fetchCGImagesFromLocalPath(folderPath: "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/pumpkin")
 
-// Snapshot pre-training
-//writeParameters(network.list(), to: parametersBefore)
-//
-//// Training
-////network.backprop(iterations: 3000, learnRate: 0.022, batchSize: 128, noise: 0.02)
-////network.backprop(iterations: 3000, learnRate: 0.008, batchSize: 128, noise: 0.05)
-////network.backprop(iterations: 3000, learnRate: 0.012, batchSize: 128, noise: 0.08)
-////network.backprop(iterations: 3000, learnRate: 0.005, batchSize: 128, noise: 0.03)
-//
-//
-//// Save params post training
-//writeParameters(network.list(), to: parametersAfter)
-//writeParameters(network.list(), to: iter36k)
-//
-//// Test
-//print(network.generate(from: "very market must have more p", characters: 300))
+let sample = images.first!
 
+let datum = ImageDatum(cgimage: sample)
 
-let clock = ContinuousClock()
-
-print(clock.measure {
-    network.backprop(iterations: 1000, learnRate: 0.03, batchSize: 32)
-})
+print(datum.printOut())
