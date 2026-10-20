@@ -129,7 +129,7 @@ print(pre)
 
 // TRAINING
 print("Training...")
-network.backprop(iterations: 1, learnRate: 0.01, batchSize: 15)
+network.backprop(iterations: 1, learnRate: 0.001, batchSize: 15)
 print("Training Complete")
 
 
