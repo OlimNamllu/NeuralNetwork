@@ -140,7 +140,7 @@ struct ImageDatum {
         
         let flatBW = BW.map { $0.c }
         
-        return (flatBW.map { Double($0) }, flatRGB.map { Double($0) })
+        return (flatBW.map { Double($0) / 256}, flatRGB.map { Double($0) / 768 })
     }
     
     func getCGImage() -> CGImage? {
