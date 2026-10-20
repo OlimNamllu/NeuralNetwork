@@ -92,20 +92,26 @@ let iter18k5L = "iter18k5L.bin"
 // 18000 iterations 486, 256, 180, 96, 27 Network, higher noise
 let iter30k5L = "iter30k5L.bin"
 
+let trainingImages = fetchCGImagesFromLocalPath(folderPath: "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/pumpkin")
+
 
 // MARK: - EXECUTE
 var network = NeuralNetwork()
 
-let images = fetchCGImagesFromLocalPath(folderPath: "/Users/tim/Documents/neural_network/NeuralNetwork/pumpkin")
 
-let sample = images[3]
-
+let sample = trainingImages[23]
 
 var datum = ImageDatum(cgimage: sample)
 
-print(datum.unflattened.count)
-print(datum.unflattened.first!.count)
+let inputs = datum.getTraningDatum().0
 
-datum.RGB = datum.bwToRGB()
+var (outputs, _) = network.run(datum.getTraningDatum().0)
 
-ImageDatum.exportCGImageToJpeg(img: datum.getCGImage()!, name: "67skibidkidtoiletl", overrideName: "file:///Users/tim/Documents/neural_network/NeuralNetwork/67676.jpg")
+print(outputs.min())
+
+var transformedImage = ImageDatum(from: outputs.map { ImageDatum.BWPixel(c: UInt8(abs($0))) })
+
+print(transformedImage.unflattened.count)
+print(transformedImage.unflattened.first!.count)
+
+ImageDatum.exportCGImageToJpeg(img: transformedImage.getCGImage()!, name: "hello", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/firstpassthrough.jpg")

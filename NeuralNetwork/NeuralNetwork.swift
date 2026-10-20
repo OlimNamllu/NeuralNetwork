@@ -30,7 +30,7 @@ struct CapturedNeurons {
 
 class NeuralNetwork {
     //    static let layers = [textContextSize * vocab.count, 324, vocab.count]
-    static let layers = [textContextSize * vocab.count, 256, 180, vocab.count]
+    static let layers = [9984, 4000, 3328]
     
     struct HiddenLayer: Equatable {
         var biases: [Double]
@@ -200,10 +200,9 @@ class NeuralNetwork {
     
     // MARK: - Backpropagation
     func backprop(iterations: Int, learnRate: Double, batchSize: Int, noise: Double = 0.03) {
-        
         for i in 0..<iterations {
-            if i % 100 == 0 {
-                print("Iteration: \(i), TEST: \(self.evaluate(on: validationStarts).printOut()), TRAINED: \(self.evaluate(on: trainedStarts).printOut())")
+            if i % 10 == 0 {
+                print(self.evaluteImages())
             }
             // define partials
             var inputWeightPartials: [[Double]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
@@ -221,14 +220,12 @@ class NeuralNetwork {
                     Array(repeating: 0, count: Self.layers[layerNum.0 + 1])
                 }
                 
-                let seed = sampleSeed
-                let inputs = encode(startingAt: seed, noise: noise)
-                let target = makeTarget(startingAt: seed)
+                let image = trainingImages.randomElement()!
+                let sampleImage = ImageDatum(cgimage: image)
                 
-                let datum: ([Double], [Double]) = (inputs, target)
+                let datum: ([Double], [Double]) = sampleImage.getTraningDatum()
                 
                 let (_, captured) = self.run(datum.0)
-                
                 
                 // add changes to partials
                 
@@ -255,10 +252,7 @@ class NeuralNetwork {
                 for (index, _) in captured.inputNeurons.enumerated() {
                     vDSP.multiply(captured.inputNeurons[index] , referenceMatrix[0], result: &inputWeightPartials[index])
                 }
-                
-                
-                
-                
+            
             }
             
             let factor = learnRate / Double(batchSize)
@@ -385,6 +379,28 @@ class NeuralNetwork {
         }
         
         return (currentValues, neurons)
+    }
+    
+    func evaluteImages() -> String {
+        var averageError: Double = 0
+        
+        for i in 0..<10 {
+            var batchError: Double = 0
+            let sampleImage = ImageDatum(cgimage: trainingImages.randomElement()!)
+            let (input, answer) = sampleImage.getTraningDatum()
+            let output = self.run(input).0
+            
+            guard output.count == input.count else {
+                return "Mismatch between network output and training datum"
+            }
+            
+            for i in 0..<output.count {
+                batchError += pow((answer[i] - output[i]), 2)
+            }
+            averageError += (batchError / Double(output.count))
+        }
+        
+        return "Average Error: \(averageError / 10)"
     }
     
     func evaluate(on starts: [Int]) -> Metrics {
