@@ -30,7 +30,7 @@ struct CapturedNeurons {
 
 class NeuralNetwork {
     //    static let layers = [textContextSize * vocab.count, 324, vocab.count]
-    static let layers = [9984, 4000, 3328]
+    static let layers = [3328, 4000, 9984]
     
     struct HiddenLayer: Equatable {
         var biases: [Double]
@@ -40,12 +40,12 @@ class NeuralNetwork {
         
         init(layerCount: Int, nextLayerCount: Int) {
             biases = (0..<layerCount).map { _ in
-                Double.random(in: -0.3...0.3)
+                Double.random(in: -0.01...0.01)
             }
             
             weights = (0..<layerCount).map { _ in
                 (0..<nextLayerCount).map { _ in
-                    Double.random(in: -0.3...0.3)
+                    Double.random(in: -0.01...0.01)
                 }
             }
         }
@@ -67,9 +67,9 @@ class NeuralNetwork {
     }()
     
     var inputWeights: [[Double]] = (0..<layers[0]).map { _ in
-        (0..<layers[1]).map { _ in Double.random(in: -0.3...0.3) } }
+        (0..<layers[1]).map { _ in Double.random(in: -0.01...0.01) } }
     
-    var outputBiases: [Double] = (0..<layers.last!).map { _ in Double.random(in: -0.1...0.1) }
+    var outputBiases: [Double] = (0..<layers.last!).map { _ in Double.random(in: -0.01...0.01) }
     
     struct Metrics {
         var mse: Double
@@ -201,7 +201,8 @@ class NeuralNetwork {
     // MARK: - Backpropagation
     func backprop(iterations: Int, learnRate: Double, batchSize: Int, noise: Double = 0.03) {
         for i in 0..<iterations {
-            if i % 10 == 0 {
+            print("Iteration \(i)")
+            if i % 3 == 0 {
                 print(self.evaluteImages())
             }
             // define partials
@@ -384,13 +385,13 @@ class NeuralNetwork {
     func evaluteImages() -> String {
         var averageError: Double = 0
         
-        for i in 0..<10 {
+        for _ in 0..<15 {
             var batchError: Double = 0
             let sampleImage = ImageDatum(cgimage: trainingImages.randomElement()!)
             let (input, answer) = sampleImage.getTraningDatum()
             let output = self.run(input).0
             
-            guard output.count == input.count else {
+            guard output.count == answer.count else {
                 return "Mismatch between network output and training datum"
             }
             

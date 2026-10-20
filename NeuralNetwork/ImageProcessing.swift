@@ -128,7 +128,7 @@ struct ImageDatum {
         }
         
         for pixel in self.RGB {
-            let grayscale = (pixel.r / 4) + (pixel.g / 4) + (pixel.b / 2)
+            let grayscale = (pixel.r / 3) + (pixel.g / 3) + (pixel.b / 3)
             self.BW.append(BWPixel(c: grayscale))
         }
     }
@@ -140,7 +140,7 @@ struct ImageDatum {
         
         let flatBW = BW.map { $0.c }
         
-        return (flatRGB.map { Double($0) }, flatBW.map { Double($0) })
+        return (flatBW.map { Double($0) }, flatRGB.map { Double($0) })
     }
     
     func getCGImage() -> CGImage? {
@@ -171,10 +171,22 @@ struct ImageDatum {
         }
     }
     
+    init(from rgbpixels: [RGBPixel]) {
+        self.BW = []
+        self.RGB = rgbpixels
+        
+        for pixel in self.RGB {
+            let grayscale = (pixel.r / 3) + (pixel.g / 3) + (pixel.b / 3)
+            self.BW.append(BWPixel(c: grayscale))
+        }
+        
+        self.width = 52
+        self.height = 64
+    }
     
     init(from bwpixels: [BWPixel]) {
         self.BW = bwpixels
-        self.RGB = bwpixels.map { RGBPixel(r: UInt8(0.75 * Double($0.c)), g: UInt8(0.75 * Double($0.c)), b: UInt8(1.5 * Double($0.c))) }
+        self.RGB = bwpixels.map { RGBPixel(r: UInt8(Double($0.c)), g: UInt8(Double($0.c)), b: UInt8(Double($0.c))) }
         self.width = 52
         self.height = 64
     }

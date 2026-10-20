@@ -99,19 +99,54 @@ let trainingImages = fetchCGImagesFromLocalPath(folderPath: "/Users/miloullman/D
 var network = NeuralNetwork()
 
 
-let sample = trainingImages[23]
+let sample = trainingImages[200]
 
 var datum = ImageDatum(cgimage: sample)
+ImageDatum.exportCGImageToJpeg(img: datum.getCGImage()!, name: "saving", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/original.jpg")
 
 let inputs = datum.getTraningDatum().0
 
-var (outputs, _) = network.run(datum.getTraningDatum().0)
 
-print(outputs.min())
+// PRETRAINING
+var pre = network.run(datum.getTraningDatum().0).0.map { UInt8(abs($0) * 255) }
+var rgbpretrain: [ImageDatum.RGBPixel] = []
+for i in 0..<(pre.count / 3) {
+    let step = i * 3
+    var pixel = ImageDatum.RGBPixel(r: 0, g: 0, b: 0)
+    pixel.r = pre[step + 0]
+    pixel.g = pre[step + 1]
+    pixel.b = pre[step + 2]
+    
+    rgbpretrain.append(pixel)
+}
+let pretrain = ImageDatum(from: rgbpretrain)
+ImageDatum.exportCGImageToJpeg(img: pretrain.getCGImage()!, name: "saving", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/pretrain.jpg")
 
-var transformedImage = ImageDatum(from: outputs.map { ImageDatum.BWPixel(c: UInt8(abs($0))) })
+print("\n\n PRINTING POST TRAINING  OUTPUTS:")
+print(pre)
 
-print(transformedImage.unflattened.count)
-print(transformedImage.unflattened.first!.count)
 
-ImageDatum.exportCGImageToJpeg(img: transformedImage.getCGImage()!, name: "hello", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/firstpassthrough.jpg")
+
+// TRAINING
+print("Training...")
+network.backprop(iterations: 1, learnRate: 0.01, batchSize: 15)
+print("Training Complete")
+
+
+// POST TRAINING
+var post = network.run(datum.getTraningDatum().0).0.map { UInt8(abs($0) * 255) }
+var rgbposttrain: [ImageDatum.RGBPixel] = []
+for i in 0..<(post.count / 3) {
+    let step = i * 3
+    var pixel = ImageDatum.RGBPixel(r: 0, g: 0, b: 0)
+    pixel.r = post[step + 0]
+    pixel.g = post[step + 1]
+    pixel.b = post[step + 2]
+    rgbposttrain.append(pixel)
+}
+let posttrain = ImageDatum(from: rgbposttrain)
+ImageDatum.exportCGImageToJpeg(img: posttrain.getCGImage()!, name: "saving", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/posttrain.jpg")
+
+
+print("\n\n PRINTING POST TRAINING  OUTPUTS:")
+print(post)
