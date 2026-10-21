@@ -94,59 +94,56 @@ let iter30k5L = "iter30k5L.bin"
 
 let trainingImages = fetchCGImagesFromLocalPath(folderPath: "/Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/pumpkin")
 
+func runAndSave(sample: Int, to file: String) {
+    let datum = ImageDatum(cgimage: trainingImages[sample])
+    var output = network.run(datum.getTraningDatum().0).0.map { UInt8(($0 + 1) * 128) }
+    
+    var rgb: [ImageDatum.RGBPixel] = []
+    for i in 0..<(output.count / 3) {
+        let step = i * 3
+        var pixel = ImageDatum.RGBPixel(r: 0, g: 0, b: 0)
+        pixel.r = output[step + 0]
+        pixel.g = output[step + 1]
+        pixel.b = output[step + 2]
+        
+        rgb.append(pixel)
+    }
+    let result = ImageDatum(from: rgb)
+    ImageDatum.exportCGImageToJpeg(img: result.getCGImage()!, name: "saving", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/\(file).jpg")
+}
+
+func save(sample: Int, bw: Bool, file: String) {
+    let datum = ImageDatum(cgimage: trainingImages[sample])
+    
+    let bwDatum = ImageDatum(from: datum.bwToRGB())
+    
+    ImageDatum.exportCGImageToJpeg(img: (bw ? bwDatum.getCGImage()! : datum.getCGImage()!), name: "saving", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/\(file).jpg")
+    
+}
 
 // MARK: - EXECUTE
 var network = NeuralNetwork()
+print("param count: \(network.paramCount)")
 
+let testIndicies: [Int] = Array(220..<225)
 
-let sample = trainingImages[200]
-
-var datum = ImageDatum(cgimage: sample)
-ImageDatum.exportCGImageToJpeg(img: datum.getCGImage()!, name: "saving", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/original.jpg")
-
-let inputs = datum.getTraningDatum().0
-
-
-// PRETRAINING
-var pre = network.run(datum.getTraningDatum().0).0.map { UInt8(abs($0) * 255) }
-var rgbpretrain: [ImageDatum.RGBPixel] = []
-for i in 0..<(pre.count / 3) {
-    let step = i * 3
-    var pixel = ImageDatum.RGBPixel(r: 0, g: 0, b: 0)
-    pixel.r = pre[step + 0]
-    pixel.g = pre[step + 1]
-    pixel.b = pre[step + 2]
-    
-    rgbpretrain.append(pixel)
+for i in 0..<testIndicies.count {
+    save(sample: testIndicies[i], bw: true, file: "original\(i)")
 }
-let pretrain = ImageDatum(from: rgbpretrain)
-ImageDatum.exportCGImageToJpeg(img: pretrain.getCGImage()!, name: "saving", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/pretrain.jpg")
 
-print("\n\n PRINTING POST TRAINING  OUTPUTS:")
-print(pre)
-
-
+for i in 0..<testIndicies.count {
+    runAndSave(sample: testIndicies[i], to: "pretrain\(i)")
+}
 
 // TRAINING
 print("Training...")
-network.backprop(iterations: 5, learnRate: 0.003, batchSize: 15)
+network.backprop(iterations: 750, learnRate: 0.001, batchSize: 4)
+network.backprop(iterations: 1000, learnRate: 0.0001, batchSize: 4)
 print("Training Complete")
 
 
 // POST TRAINING
-var post = network.run(datum.getTraningDatum().0).0.map { UInt8(abs($0) * 255) }
-var rgbposttrain: [ImageDatum.RGBPixel] = []
-for i in 0..<(post.count / 3) {
-    let step = i * 3
-    var pixel = ImageDatum.RGBPixel(r: 0, g: 0, b: 0)
-    pixel.r = post[step + 0]
-    pixel.g = post[step + 1]
-    pixel.b = post[step + 2]
-    rgbposttrain.append(pixel)
+
+for i in 0..<testIndicies.count {
+    runAndSave(sample: testIndicies[i], to: "posttrain\(i)")
 }
-let posttrain = ImageDatum(from: rgbposttrain)
-ImageDatum.exportCGImageToJpeg(img: posttrain.getCGImage()!, name: "saving", overrideName: "file:///Users/miloullman/Desktop/NeuralNetwork/NeuralNetwork/posttrain.jpg")
-
-
-print("\n\n PRINTING POST TRAINING  OUTPUTS:")
-print(post)

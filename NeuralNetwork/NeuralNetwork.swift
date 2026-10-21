@@ -30,7 +30,21 @@ struct CapturedNeurons {
 
 class NeuralNetwork {
     //    static let layers = [textContextSize * vocab.count, 324, vocab.count]
-    static let layers = [3328, 4000, 9984]
+    static let layers = [3328, 729, 512, 1024, 9984]
+    
+    var paramCount: Int {
+        var sum = 0
+        
+        for i in 1..<Self.layers.count {
+            sum += Self.layers[i]
+        }
+           
+        for i in 0..<Self.layers.count - 1 {
+            sum += Self.layers[i] * Self.layers[i + 1]
+        }
+
+        return sum
+    }
     
     struct HiddenLayer: Equatable {
         var biases: [Double]
@@ -40,12 +54,12 @@ class NeuralNetwork {
         
         init(layerCount: Int, nextLayerCount: Int) {
             biases = (0..<layerCount).map { _ in
-                Double.random(in: -0.01...0.01)
+                Double.random(in: -0.001...0.001)
             }
             
             weights = (0..<layerCount).map { _ in
                 (0..<nextLayerCount).map { _ in
-                    Double.random(in: -0.01...0.01)
+                    Double.random(in: -0.001...0.001)
                 }
             }
         }
@@ -67,9 +81,9 @@ class NeuralNetwork {
     }()
     
     var inputWeights: [[Double]] = (0..<layers[0]).map { _ in
-        (0..<layers[1]).map { _ in Double.random(in: -0.01...0.01) } }
+        (0..<layers[1]).map { _ in Double.random(in: -0.001...0.001) } }
     
-    var outputBiases: [Double] = (0..<layers.last!).map { _ in Double.random(in: -0.01...0.01) }
+    var outputBiases: [Double] = (0..<layers.last!).map { _ in Double.random(in: -0.001...0.001) }
     
     struct Metrics {
         var mse: Double
@@ -202,9 +216,9 @@ class NeuralNetwork {
     func backprop(iterations: Int, learnRate: Double, batchSize: Int, noise: Double = 0.03) {
         for i in 0..<iterations {
             print("Iteration \(i)")
-            if i % 3 == 0 {
-                print(self.evaluteImages())
-            }
+//            if i % 3 == 0 {
+//                print(self.evaluteImages())
+//            }
             // define partials
             var inputWeightPartials: [[Double]] = Array(repeating: Array(repeating: 0, count: Self.layers[1]), count: Self.layers[0])
             var outputBiasPartials: [Double] = Array(repeating: 0, count: Self.layers.last!)
